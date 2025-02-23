@@ -1,12 +1,11 @@
 from fastapi import FastAPI
-from app.api import users
+from app.api import users, auth
 from app.db.session import Base, engine
 
-# Create DB tables
 Base.metadata.create_all(bind=engine)
 
-# Initialize FastAPI app
 app = FastAPI(title="Cookiefy API")
 
 # Include routers
-app.include_router(users.router, prefix="/api")
+app.include_router(users.router)
+app.include_router(auth.router)
