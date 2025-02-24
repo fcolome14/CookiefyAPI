@@ -1,33 +1,91 @@
 import secrets
 from string import digits
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, exists
-from app.models.user import User
 from abc import ABC, abstractmethod
+from sqlalchemy.orm import Session
+from sqlalchemy import exists
+from app.models.user import User
+from app.core.security import decode_access_token
+from app.repositories.user_repo import UserRepository
+from app.models.user import User
 
-class AuthCode(ABC):
+class AuthCodeStrategy(ABC):
+    """Abstract strategy for authentication code generation and decoding."""
+
     @abstractmethod
-    def generate_code(self, db: Session) -> str:
+    def generate_code(self) -> str:
+        """Generate an authentication code."""
         pass
 
-class GenerateAuthCode(AuthCode):
-    def __init__(self, length=6, max_attempts=10):
+    @abstractmethod
+    def validate_code(self, code: str, db: Session) -> bool:
+        """Check if the code already exists in the database."""
+        pass
+
+class TokenValidationStrategy(ABC):
+    """Abstract strategy for validating JWT tokens."""
+
+    @abstractmethod
+    def validate_tenant(self, payload: dict) -> bool:
+        """Check if the JWT token is associated with the expected tenant."""
+        pass
+
+class NumericAuthCode(AuthCodeStrategy):
+    """Generate a numeric authentication code."""
+
+    def __init__(self, length: int = 6):
         self.length = length
-        self.max_attempts = max_attempts
 
-    async def generate_code(self, db: Session) -> str:
-        """Generate a unique authentication code."""
-        for _ in range(self.max_attempts):
-            validation_code = await self._generate_random_code()
-            if not await self._check_auth_code(db, validation_code):
-                return {"status": "success", "message": validation_code}
-        
-        return {"status": "error", "message": "Failed to generate a unique authentication code after multiple attempts."}
-
-    async def _generate_random_code(self) -> str:
-        """Generate a random code using `secrets` for security."""
+    def generate_code(self) -> str:
+        """Generate a random numeric authentication code."""
         return "".join(secrets.choice(digits) for _ in range(self.length))
 
-    async def _check_auth_code(self, db: Session, code: str) -> bool:
-        """Check if the generated code already exists."""
+    def validate_code(self, code: str, db: Session) -> bool:
+        """Check if the code already exists in the database."""
         return db.query(exists().where(User.code == code)).scalar()
+
+class JWTTokenValidator(TokenValidationStrategy):
+    """JWT token validation strategy."""
+    
+    def __init__(self, user_repo: UserRepository):
+        self.user_repo = user_repo
+
+    def validate_tenant(self, payload: dict) -> bool:
+        """Check if the token belongs to the expected tenant."""
+        tenant = payload.get("user")
+        expected_tenant: User = self.user_repo.get_user_by_email_or_username(email=tenant, username=None)
+        return tenant == expected_tenant.email
+
+class AuthCodeManager:
+    """Manage the generation and validation of authentication codes."""
+
+    def __init__(self, strategy: AuthCodeStrategy, db: Session, max_attempts: int = 10):
+        self.strategy = strategy
+        self.db = db
+        self.max_attempts = max_attempts
+
+    async def generate_unique_code(self) -> dict:
+        """Generate a unique authentication code, ensuring it's not duplicated."""
+        for _ in range(self.max_attempts):
+            code = self.strategy.generate_code()
+            if not self.strategy.validate_code(code, self.db):
+                return {"status": "success", "message": code}
+
+        return {"status": "error", "message": "Failed to generate a unique code after multiple attempts."}
+
+class AuthCodeDecoder:
+    """Decode and validate JWT payload for auth codes."""
+
+    def __init__(self, validator: TokenValidationStrategy, db: Session):
+        self.validator = validator
+        self.db = db
+
+    def decode_and_validate(self, jwt_token: str) -> dict:
+        """Decode JWT and validate expiration and tenant."""
+        payload = decode_access_token(jwt_token)
+        if not payload:
+            return {"status": "error", "message": "Invalid token"}
+
+        if not self.validator.validate_tenant(payload):
+            return {"status": "error", "message": "Tenant mismatch"}
+
+        return {"status": "success", "message": "Token is valid"}

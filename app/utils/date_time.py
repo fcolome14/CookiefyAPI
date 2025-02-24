@@ -74,6 +74,15 @@ class TimeUtils:
         if cls._instance is None:
             cls._instance = super(TimeUtils, cls).__new__(cls)
         return cls._instance
+    
+    def is_times_exp(self, exp_timestamp: int) -> dict:
+        """Check if a timestamp has expired"""
+        if not isinstance(exp_timestamp, int) or exp_timestamp <= 0:
+            return {"status": "error", "message": "The 'exp_timestamp' must be a valid positive integer."}
+        
+        expiration_date = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc) #Convert UNIX to UTC
+        has_expired = datetime.now(timezone.utc) > expiration_date
+        return {"status": "success", "message": has_expired}
 
     @staticmethod
     def exp_time() -> datetime:
