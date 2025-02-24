@@ -2,82 +2,90 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
 from sqlalchemy import or_
-from app.services.auth_service import GenerateAuthCode
-from app.core.security import pwd_context
 from sqlalchemy.exc import IntegrityError
-from abc import ABC, abstractmethod
+from app.core.security import pwd_context
+from app.services.auth_service import GenerateAuthCode
+from app.utils.date_time import TimeUtils
+from datetime import datetime
+import logging
 
+logger = logging.getLogger(__name__)
 
-class Validations(ABC):
-    @abstractmethod
-    def create_user(self, db: Session, user_input: UserCreate) -> dict:
-        pass
+class UserRepository:
+    """Repository for user-related database operations."""
 
+    def __init__(self, db: Session):
+        self.db = db
 
-class CreateUser(Validations):
-    async def create_user(self, db: Session, user_input: UserCreate) -> dict:
-        """Main method to create a new user."""
-        user = self._check_account(db, user_input.email, user_input.username)
-        if user["status"] == "error":
-            return user
-        
-        auth_code = GenerateAuthCode()
-        result = await auth_code.generate_code(db)
-        if result["status"] == "error":
-            return result
-        
-        code = result["message"]
-        if isinstance(code, str):
-            code = int(code)
+    def get_user_by_email_or_username(self, email: str, username: str) -> User | None:
+        """Check if a user with the given email or username exists."""
+        return (
+            self.db.query(User)
+            .filter(or_(User.email == email, User.username == username))
+            .first()
+        )
 
-        return self._add_user(db, user_input, code)
-
-    def _check_account(self, db: Session, email: str, username: str) -> dict:
-        """Check if user email or username already exists."""
-        try:
-            existing_user = (
-                db.query(User)
-                .filter(or_(User.email == email, User.username == username))
-                .first()
-            )
-
-            if not existing_user:
-                return {"status": "success", "message": "No account found"}
-            else:
-                return {
-                    "status": "error",
-                    "message": f"Account already exists for email '{email}' or username '{username}'"
-                }
-
-        except Exception as exc:
-            print(f"Error during account check: {exc}")
-            return {"status": "error", "message": "Database query failed"}
-
-    def _add_user(self, db: Session, user: UserCreate, code: int) -> dict:
+    def add_user(self, user: User) -> User:
         """Add a new user to the database."""
-        hashed_password = pwd_context.hash(user.password)
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+
+class UserService:
+    """Service for managing user creation."""
+
+    def __init__(self, db: Session, auth_code_service: GenerateAuthCode, time_utils: TimeUtils):
+        self.db = db
+        self.auth_code_service = auth_code_service
+        self.time_utils = time_utils
+        self.user_repo = UserRepository(db)
+
+    async def create_user(self, user_input: UserCreate) -> UserRead | None:
+        """Create a new user after validating input and generating auth code."""
+        if self._check_existing_account(user_input.email, user_input.username):
+            logger.error("Account already exists for email '%s' or username '%s'", user_input.email, user_input.username)
+            return None
+        
+        auth_code_result = await self.auth_code_service.generate_code(self.db)
+        if auth_code_result["status"] == "error":
+            logger.error("Failed to generate auth code: %s", auth_code_result["message"])
+            return None
+
+        code = int(auth_code_result["message"])
+        code_expiration = self.time_utils.exp_time()
+
+        return self._create_new_user(user_input, code, code_expiration)
+
+    def _check_existing_account(self, email: str, username: str) -> bool:
+        """Check if an account exists with the given email or username."""
+        existing_user = self.user_repo.get_user_by_email_or_username(email, username)
+        return existing_user is not None
+
+    def _create_new_user(self, user_input: UserCreate, code: int, code_exp: datetime) -> UserRead | None:
+        """Add a new user to the database."""
+        hashed_password = pwd_context.hash(user_input.password)
+
+        new_user = User(
+            name=user_input.full_name,
+            username=user_input.username.lower(),
+            email=user_input.email.lower(),
+            is_active=False,
+            code=code,
+            code_exp=code_exp,
+            hashed_password=hashed_password,
+        )
 
         try:
-            db_user = User(
-                name=user.full_name,
-                username=user.username.lower(),  
-                email=user.email.lower(),
-                is_active=False,
-                code=code,  
-                hashed_password=hashed_password
-            )
-
-            db.add(db_user)
-            db.commit()
-            db.refresh(db_user)
-
-            return {"status": "success", "message": "User created successfully", "data": db_user}
-
+            user = self.user_repo.add_user(new_user)
+            logger.info("User created successfully with ID %d", user.id)
+            return user
         except IntegrityError:
-            db.rollback()
-            return {"status": "error", "message": "Email or username already exists"}
-
+            self.db.rollback()
+            logger.error("Failed to create user: Email or username already exists")
+            return None
         except Exception as exc:
-            db.rollback()
-            print(f"Error during user creation: {exc}")
-            return {"status": "error", "message": "Failed to create user"}
+            self.db.rollback()
+            logger.error("Unexpected error during user creation: %s", exc)
+            return None

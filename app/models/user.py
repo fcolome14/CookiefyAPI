@@ -11,6 +11,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     code = Column(Integer, unique=True, index=True)
+    code_exp = Column(String, unique=False, index=False)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     created_at = Column(
