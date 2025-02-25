@@ -6,6 +6,8 @@ from app.schemas.responses import SuccessResponse
 from app.services.auth_service import AuthCodeDecoder, JWTTokenValidator
 from app.repositories.user_repo import UserRepository
 from fastapi.templating import Jinja2Templates
+from app.core.i18n import translate
+from app.core.config import settings
 #from app.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -27,10 +29,14 @@ def login(db: Session = Depends(get_db), user_credentials: OAuth2PasswordRequest
 
 @router.get("/token", status_code=status.HTTP_202_ACCEPTED)
 #@limiter.limit("3/minute")
-async def code_validation(token: str, db: Session = Depends(get_db), request: Request = None):
+async def code_validation(token: str, db: Session = Depends(get_db), request: Request = None, _=Depends(translate)):
+    _ = _  # Get the translation function
     
     user_repo = UserRepository(db)
     token_validator = JWTTokenValidator(user_repo)
+    
+    user_language = request.headers.get("Accept-Language", "en").split(",")[0].strip()
+    request.state.language = user_language
     
     decoder = AuthCodeDecoder(validator=token_validator, db=db)
     result = decoder.decode_and_validate(token)
@@ -40,7 +46,16 @@ async def code_validation(token: str, db: Session = Depends(get_db), request: Re
         success = False
     
     try:
-        return templates.TemplateResponse("validation_result.html", {"request": request, "message": result["message"], "success": success})
+        return templates.TemplateResponse(
+        "validation_result.html",
+        {
+            "request": request,
+            "message": _("Your account has been successfully verified.") if success else _("Verification failed."),
+            "success": success,
+            "email": settings.email,
+            "_": _
+        }
+    )
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Template not found.")
     except IOError:

@@ -1,0 +1,67 @@
+# Spanish translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-02-25 12:14+0100\n"
+"PO-Revision-Date: 2025-02-25 12:17+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: app/api/auth.py:50
+msgid "Your account has been successfully verified."
+msgstr "Su cuenta ha sido verificada con éxito."
+
+#: app/api/auth.py:50
+msgid "Verification failed."
+msgstr "La verificación ha fallado."
+
+#: app/tmp/validation_result.html:6
+msgid "Verification Result"
+msgstr "Resultado de la Verificación"
+
+#: app/tmp/validation_result.html:62
+msgid "Cookiefy Logo"
+msgstr "Logotipo de Cookiefy"
+
+#: app/tmp/validation_result.html:69
+msgid ""
+"Your account has been successfully verified. You can now sign in to the "
+"Cookiefy app."
+msgstr ""
+"Su cuenta ha sido verificada con éxito. Ahora puede iniciar sesión en la "
+"aplicación Cookiefy."
+
+#: app/tmp/validation_result.html:70
+msgid "If you have any issues, please contact our support team."
+msgstr "Si tiene algún problema, comuníquese con nuestro equipo de soporte."
+
+#: app/tmp/validation_result.html:73
+msgid "Account Support"
+msgstr "Soporte de Cuenta"
+
+#: app/tmp/validation_result.html:76
+msgid ""
+"The verification process failed. Please ensure you entered the correct "
+"code sent to your email."
+msgstr ""
+"El proceso de verificación falló. Asegúrese de haber ingresado el código "
+"correcto enviado a su correo electrónico."
+
+#: app/tmp/validation_result.html:77
+msgid ""
+"If the issue persists, the token might have expired. Try requesting a new"
+" verification code."
+msgstr ""
+"Si el problema persiste, es posible que el token haya caducado. Intente "
+"solicitar un nuevo código de verificación."

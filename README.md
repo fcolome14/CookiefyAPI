@@ -14,6 +14,7 @@ Welcome to **CookiefyAPI**, a FastAPI-based social media project. This guide pro
 7. [Testing the API](#testing-the-api)
 8. [Common Issues & Troubleshooting](#common-issues--troubleshooting)
 9. [Project Structure](#project-structure)
+10. [Language](#language)
 
 ---
 
@@ -231,6 +232,33 @@ cookiefyapi/
 ├── pyproject.toml       # Poetry configuration
 ├── README.md            # Project documentation
 └── Dockerfile           # Container setup (optional)
+```
+
+## **Language**
+
+To compile ````babel.cfg```` run:
+
+```bash
+pybabel extract -F app/babel.cfg -o messages.pot .
+```
+
+To initialize new translations a ````.po```` file run:
+
+```bash
+pybabel init -i messages.pot -d app/locales -l en
+pybabel init -i messages.pot -d app/locales -l es
+```
+
+To update existing translations run:
+
+```bash
+pybabel update -i messages.pot -d app/locales
+```
+
+Compile them from a ````.po```` into binary ````.mo```` file by running:
+
+```bash
+pybabel compile -d app/locales
 ```
 
 ## 📜 **Useful Commands**

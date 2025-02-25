@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ request.state.language or 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification Result</title>
+    <title>{{ _("Verification Result") }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -41,11 +41,11 @@
         .instructions {
             font-size: 16px;
             color: #666;
-            text-align: center;
+            text-align: left; /* Changed from center to left */
             margin-top: 10px;
         }
         .email-link {
-            color: #328a36; /* Green color for the link */
+            color: #328a36;
             text-decoration: none;
             font-weight: bold;
             font-size: 16px;
@@ -59,23 +59,22 @@
     <div class="email-container">
         <!-- Logo Section -->
         <div class="logo-container">
-            <img src="/static/assets/images/logo_color.png" alt="Cookiefy Logo">
+            <img src="/static/assets/images/logo_color.png" alt="{{ _('Cookiefy Logo') }}">
         </div>
         
         <!-- Main Content -->
         <div class="header">{{ message }}</div>
         <p class="instructions">
             {% if success %}
-                Your account has been successfully verified. You can now sign in to Cookiefy app.
-                If you have any issues, please contact our support team.
-                <br>
-                <!-- Center the plain email link -->
+                {{ _("Your account has been successfully verified. You can now sign in to the Cookiefy app.") }}<br>
+                {{ _("If you have any issues, please contact our support team.") }}
+                <br><br>
                 <div style="text-align: center;">
-                    <a href="mailto:{{email}}?subject=Your%20Subject&body=Your%20Message%20Here" class="email-link">{{email}}</a>
+                    <a href="mailto:{{ email }}?subject={{ _('Account Support') }}" class="email-link">{{ email }}</a>
                 </div>
             {% else %}
-                The verification process failed. Please ensure you entered the correct code sent to your email.
-                If the issue persists, the token might have expired. Try requesting a new verification code.            
+                {{ _("The verification process failed. Please ensure you entered the correct code sent to your email.") }}<br>
+                {{ _("If the issue persists, the token might have expired. Try requesting a new verification code.") }}
             {% endif %}
         </p>
     </div>
