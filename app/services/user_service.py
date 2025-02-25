@@ -3,10 +3,8 @@ import aiofiles
 from pathlib import Path
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
-from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from string import Template
-from app.core.security import pwd_context
 from app.services.auth_service import AuthCodeManager
 from app.utils.date_time import TimeUtils
 from app.utils.email import EmailService, EmailSenderFactory

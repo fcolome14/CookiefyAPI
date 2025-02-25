@@ -7,7 +7,10 @@ LOCALES_DIR = os.path.join(os.path.dirname(__file__), "../locales")
 
 def get_locale(request: Request) -> str:
     """Get user language from the Accept-Language header (default to 'en')."""
-    return request.headers.get("Accept-Language", "en").split(",")[0].strip()
+    if isinstance(request, Request):
+        return request.headers.get("Accept-Language", "en").split(",")[0].strip()
+    else:
+        return "en"
 
 def get_translator(locale: str):
     """Return the translation object based on the user's locale."""

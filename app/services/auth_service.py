@@ -4,23 +4,25 @@ from abc import ABC, abstractmethod
 from sqlalchemy.orm import Session
 from sqlalchemy import exists
 from app.models.user import User
-from app.core.security import decode_access_token
+from app.core.security import decode_access_token, verify_password, create_access_token
 from app.repositories.user_repo import UserRepository
 import logging
 
 logger = logging.getLogger(__name__)
 
+class AuthCredentials(ABC):
+    """Abstract strategy for authentication user credentials."""
+
+    @abstractmethod
+    def validate_credentials(self, email: str, username: str, password: str) -> str:
+        """Generate an authentication code."""
+        pass
 class AuthCodeStrategy(ABC):
     """Abstract strategy for authentication code generation and decoding."""
 
     @abstractmethod
     def generate_code(self) -> str:
-        """Generate an authentication code."""
-        pass
-
-    @abstractmethod
-    def validate_code(self, code: str, db: Session) -> bool:
-        """Check if the code already exists in the database."""
+        """Validate user credentials."""
         pass
 
 class TokenValidationStrategy(ABC):
@@ -36,6 +38,24 @@ class TokenValidationStrategy(ABC):
         """Invalidate auth code."""
         pass
 
+class AuthUserCredentials(AuthCredentials):
+    """Auth user credentials when sign in"""
+    def __init__(self, user_repo: UserRepository):
+        self.user_repo = user_repo
+        
+    def validate_credentials(self, email: str, username: str, password: str) -> str:
+        """Validate user credentials."""
+        user: User = self.user_repo.get_user_by_email_or_username(email, username)
+        if not user.is_active:
+            return {"status": "error", "message": "Unverified account"}
+        if verify_password(password, user.hashed_password):
+            return {"status": "success", "message": self.generate_jwt(user.id)}
+        return {"status": "error", "message": "Unauthorized"}
+    
+    def generate_jwt(self, id: int) -> str:
+        data = {"id": id}
+        return create_access_token(data)
+    
 class NumericAuthCode(AuthCodeStrategy):
     """Generate a numeric authentication code."""
 

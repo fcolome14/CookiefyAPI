@@ -2,30 +2,41 @@ from fastapi import APIRouter, Depends, Request, status, HTTPException
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.schemas.responses import SuccessResponse
-from app.services.auth_service import AuthCodeDecoder, JWTTokenValidator
+from app.schemas.responses import SuccessResponse, ErrorResponse
+from app.services.auth_service import AuthCodeDecoder, AuthUserCredentials, JWTTokenValidator
 from app.repositories.user_repo import UserRepository
 from fastapi.templating import Jinja2Templates
 from app.core.i18n import translate
 from app.core.config import settings
-#from app.rate_limit import limiter
+from slowapi.util import get_remote_address
+from app.core.exceptions import limiter
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 templates = Jinja2Templates(directory="app/tmp")
 
 @router.post("/login", response_model=SuccessResponse, status_code=status.HTTP_202_ACCEPTED)
-#@limiter.limit("3/minute")
+@limiter.limit("3/minute", key_func=get_remote_address)
 def login(db: Session = Depends(get_db), user_credentials: OAuth2PasswordRequestForm = Depends(), request: Request = None):
     
-    return SuccessResponse(
-            status="success",
-            message="OK",
-            data="TEST",
-            meta={
-                "request_id": request.headers.get("request-id", "default_request_id"),
-                "client": request.headers.get("client-type", "unknown"),
-            },
-        )
+    user_repo = UserRepository(db)
+    auth_credentials = AuthUserCredentials(user_repo)
+    result = auth_credentials.validate_credentials(user_credentials.username, None, user_credentials.password)
+    if result["status"] == "success":
+        return SuccessResponse(
+                message="Login succeed",
+                data=result["message"],
+                meta={
+                    "request_id": request.headers.get("request-id", "default_request_id"),
+                    "client": request.headers.get("client-type", "unknown"),
+                },
+            )
+    return ErrorResponse(
+                message="Login failed",
+                meta={
+                    "request_id": request.headers.get("request-id", "default_request_id"),
+                    "client": request.headers.get("client-type", "unknown"),
+                },
+            )
 
 @router.get("/token", status_code=status.HTTP_202_ACCEPTED)
 #@limiter.limit("3/minute")
