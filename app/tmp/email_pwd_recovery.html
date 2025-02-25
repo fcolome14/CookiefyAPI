@@ -21,11 +21,15 @@
             color: #333;
         }
         .code {
-            font-size: 36px;
+            font-size: 40px;
             font-weight: bold;
-            color: #2e7d32;
+            color: #d32f2f;
             text-align: center;
-            margin-top: 20px;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #fbe9e7;
+            border-radius: 8px;
+            letter-spacing: 4px;
         }
         .footer {
             text-align: center;
@@ -59,27 +63,16 @@
 </head>
 <body>
     <div class="email-container">
-        <div class="header">Welcome to Cookiefy!</div>
+        <div class="header">Password Recovery Request</div>
         <p>Hello,</p>
     
-        <p>Thank you for joining Cookiefy! To activate your account and start using the app, please verify your email by clicking the button below:</p>
+        <p>We received a request to reset the password for your Cookiefy account. Use the following verification code to proceed</p>
     
-        <div style="text-align: center; margin: 20px 0;">
-            <a href="${verification_url}?token=${verification_token}" class="btn-verify" style="
-                display: inline-block;
-                padding: 12px 20px;
-                background-color: #4CAF50;
-                color: white;
-                text-decoration: none;
-                border-radius: 5px;
-                font-size: 16px;">
-                Verify Your Account
-            </a>
-        </div>
+        <div class="code">${recovery_code}</div>
     
-        <p><strong>Important:</strong> This verification link will expire in <strong>${code_exp} minutes</strong>. Once verified, your account will be activated, and you'll be able to sign in to the mobile app immediately.</p>
+        <p><strong>Important:</strong> This verification link will expire in <strong>${recovery_code_exp} minutes</strong>. Once verified, you will be able to reset your password from the app.</p>
     
-        <p>If you did not request this verification, you can safely ignore this email.</p>
+        <p>If you didn't request a password reset, you can safely ignore this email. Your account remains secure.</p>
     
         <div class="footer" style="margin-top: 30px; text-align: center; color: #888;">
             <p>&copy; 2024 Cookiefy App. All rights reserved.</p>

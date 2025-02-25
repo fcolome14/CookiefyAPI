@@ -1,6 +1,6 @@
 # app/core/exceptions.py
 
-from fastapi import Request
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from app.schemas.responses import ErrorResponse
@@ -9,7 +9,7 @@ from slowapi.util import get_remote_address
 
 limiter = Limiter(key_func=get_remote_address)
 
-async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+async def rate_limit_handler(_: Request, exc: RateLimitExceeded):
     """Handle rate limit exceeded exceptions."""
     message = exc.detail.split(" ")
     if len(message) >= 4:
@@ -25,6 +25,6 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     )
 
     return JSONResponse(
-        status_code=429,  # 429 Too Many Requests
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         content=error_response.model_dump(),
     )

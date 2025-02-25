@@ -6,6 +6,7 @@ from sqlalchemy import exists
 from app.models.user import User
 from app.core.security import decode_access_token, verify_password, create_access_token
 from app.repositories.user_repo import UserRepository
+from app.utils.date_time import TimeUtils
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,8 +23,39 @@ class AuthCodeStrategy(ABC):
 
     @abstractmethod
     def generate_code(self) -> str:
-        """Validate user credentials."""
+        """Generate a random numeric authentication code."""
         pass
+    
+    @abstractmethod
+    def validate_recovery_code(self, email: str, code: int) -> str:
+        """Validate a recovery password generated code."""
+        pass
+
+class RecoveryAuthCode(AuthCodeStrategy):
+    """Validate a recovery password generated code."""
+    
+    def __init__(self, user_repo: UserRepository, time_utils: TimeUtils):
+        self.user_repo = user_repo
+        self.time_utils = time_utils
+    
+    def generate_code(self) -> str:
+        """Generate a random numeric authentication code."""
+        pass
+    
+    def validate_recovery_code(self, email: str, code: int) -> str:
+        """Validate a recovery password generated code."""
+        user: User = self.user_repo.get_user_by_email_or_username(email, None)
+        if not user.is_active:
+            return {"status": "error", "message": "Unverified account"}
+        if user.code == code:
+            result = self.time_utils.is_times_exp(user.code_exp)["status"]
+            if result == 'success':
+                user.code = None
+                user.code_exp = None
+                _ = self.user_repo.update_user(user)
+                return True
+            return False
+        return False
 
 class TokenValidationStrategy(ABC):
     """Abstract strategy for validating JWT tokens."""
@@ -44,7 +76,7 @@ class AuthUserCredentials(AuthCredentials):
         self.user_repo = user_repo
         
     def validate_credentials(self, email: str, username: str, password: str) -> str:
-        """Validate user credentials."""
+        """Validate user credentials (password)."""
         user: User = self.user_repo.get_user_by_email_or_username(email, username)
         if not user.is_active:
             return {"status": "error", "message": "Unverified account"}
@@ -65,6 +97,10 @@ class NumericAuthCode(AuthCodeStrategy):
     def generate_code(self) -> str:
         """Generate a random numeric authentication code."""
         return "".join(secrets.choice(digits) for _ in range(self.length))
+
+    def validate_recovery_code(self) -> str:
+        """Placeholder implementation for abstract method."""
+        raise NotImplementedError("This method is not implemented for NumericAuthCode.")
 
     def validate_code(self, code: str, db: Session) -> bool:
         """Check if the code already exists in the database."""

@@ -6,6 +6,13 @@ class UserCreate(BaseModel):
     username: str
     password: str
 
+class VerifyCodeRequest(BaseModel):
+    email: EmailStr
+    code: int
+    
+class PasswordCodeRequest(BaseModel):
+    email: EmailStr
+
 class UserRead(BaseModel):
     id: int
     full_name: str

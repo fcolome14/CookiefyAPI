@@ -14,9 +14,13 @@ from app.core.security import create_access_token
 import logging
 from app.repositories.user_repo import UserRepository
 from app.core.security import hash_password
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 CODE_VALIDATION_ENDPOINT = "/auth/token"
+class EmailTemplates(Enum):
+    NEW_USER = "email_code.html"
+    PASSWORD_RECOVERY = "email_pwd_recovery.html"
 
 class UserService:
     """Service for managing user creation."""
@@ -41,27 +45,58 @@ class UserService:
             return {"status": "error", "message": msg}
 
         code = int(auth_code_result["message"])
-        code_expiration = self.time_utils.exp_time()
+        code_expiration = self.time_utils.exp_time(settings.email_auth_code_expire_minutes)
+        tmp = EmailTemplates.NEW_USER.value
         
-        sent_email = await self._send_auth_email(code, user_input.email)
+        sent_email = await self._send_auth_email(code, user_input.email, tmp, "Your Verification Code")
         if sent_email["status"] == "error":
             msg = "Failed to send email"
             logger.error(msg)
             return {"status": "error", "message": msg}
 
         return self._create_new_user(user_input, code, code_expiration)
+    
+    async def auth_user(self, user_email: str) -> UserRead | None:
+        """Authenticate user by generating auth code."""
+        user: User = self._check_existing_account(user_email, None)
+        if not user.is_active:
+            return {"status": "error", "message": "User account is not activated"}
+        
+        auth_code_result = await self.auth_code_service.generate_unique_code()
+        if auth_code_result["status"] == "error":
+            msg = f"Failed to generate auth code: {auth_code_result['message']}"
+            logger.error(msg)
+            return {"status": "error", "message": msg}
+        
+        code = int(auth_code_result["message"])
+        code_expiration = self.time_utils.exp_time(settings.email_recovery_code_expire_minutes)
+        
+        user.code = code
+        user.code_exp = code_expiration
+        tmp = EmailTemplates.PASSWORD_RECOVERY.value
+        
+        sent_email = await self._send_auth_email(code, user_email, tmp, "Your Recovery Code")
+        if sent_email["status"] == "error":
+            msg = "Failed to send email"
+            logger.error(msg)
+            return {"status": "error", "message": msg}
+        
+        user = self.user_repo.update_user(user)
+        return {"status": "success", "message": user}
 
     def _check_existing_account(self, email: str, username: str) -> bool:
         """Check if an account exists with the given email or username."""
         existing_user = self.user_repo.get_user_by_email_or_username(email, username)
-        return existing_user is not None
+        if existing_user:
+            return existing_user
+        return None
     
-    async def _send_auth_email(self, code: int, recipient: str) -> dict:
+    async def _send_auth_email(self, code: int, recipient: str, template_name: str, title: str) -> dict:
         """Send an authentication email with a verification code."""
         email_sender = EmailSenderFactory.get_email_sender()
         email_service = EmailService(email_sender)
 
-        template_content = await self._get_email_template("email_code.html")
+        template_content = await self._get_email_template(template_name)
         if not template_content:
             logger.error("Email template not found")
             return {"status": "error", "message": "Email template not found"}
@@ -69,12 +104,12 @@ class UserService:
         data={"user": recipient, "code": code}
         jwt = create_access_token(data)
 
-        html_content = self._build_email_content(template_content, code, jwt)
+        html_content = self._build_email_content(template_content, template_name, code, jwt)
         if not html_content:
             logger.error("Failed to build email content")
             return {"status": "error", "message": "Failed to build email content"}
 
-        subject = "Your Verification Code"
+        subject = title
         try:
             if await email_service.send_email(to=recipient, subject=subject, body=html_content):
                 logger.info("Email sent successfully to %s", recipient)
@@ -101,16 +136,25 @@ class UserService:
             logger.exception("Failed to read email template: %s", e)
             return {"status": "error", "message": "Failed to read email template"}
 
-    def _build_email_content(self, template_content: str, code: int, jwt: str) -> str | None:
+    def _build_email_content(self, template_content: str, template_name: str, code: int, jwt: str) -> str | None:
         """Substitute placeholders in the email template."""
         try:
             endpoint_url = f"{settings.domain}{CODE_VALIDATION_ENDPOINT}"
             template = Template(template_content)
+            if template_name == EmailTemplates.NEW_USER.value:
+                return template.substitute(
+                    code_exp=settings.email_auth_code_expire_minutes,
+                    verification_token=jwt,
+                    verification_url=endpoint_url,
+                    verification_code=str(code),
+                )
             return template.substitute(
-                verification_token=jwt,
-                verification_url=endpoint_url,
-                verification_code=str(code),
-            )
+                    recovery_code_exp=settings.email_recovery_code_expire_minutes,
+                    recovery_code=code,
+                    verification_token=jwt,
+                    verification_url=endpoint_url,
+                    verification_code=str(code),
+                )
         except KeyError as e:
             logger.error("Missing placeholder in template: %s", e)
             return {"status": "error", "message": "Missing placeholder in template"}

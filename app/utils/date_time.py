@@ -75,19 +75,29 @@ class TimeUtils:
             cls._instance = super(TimeUtils, cls).__new__(cls)
         return cls._instance
     
-    def is_times_exp(self, exp_timestamp: int) -> dict:
-        """Check if a timestamp has expired"""
-        if not isinstance(exp_timestamp, int) or exp_timestamp <= 0:
-            return {"status": "error", "message": "The 'exp_timestamp' must be a valid positive integer."}
+    from datetime import datetime, timezone
+
+    def is_times_exp(self, exp_timestamp) -> dict:
+        """Check if a timestamp has expired, supporting both int (Unix) and datetime."""
         
-        expiration_date = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc) #Convert UNIX to UTC
+        if isinstance(exp_timestamp, int):
+            try:
+                expiration_date = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
+            except (OSError, ValueError):
+                return {"status": "error", "message": "Invalid Unix timestamp provided."}
+        elif isinstance(exp_timestamp, datetime):
+            expiration_date = exp_timestamp.astimezone(timezone.utc)
+        else:
+            return {"status": "error", "message": "The 'exp_timestamp' must be a valid integer (Unix timestamp) or datetime object."}
+        
         has_expired = datetime.now(timezone.utc) > expiration_date
-        return {"status": "success", "message": has_expired}
+        return {"status": "success", "message": has_expired, "expiration_date": expiration_date.isoformat()}
+
 
     @staticmethod
-    def exp_time() -> datetime:
+    def exp_time(_time: int = settings.access_token_expire_minutes) -> datetime:
         """Generate expiration time for auth code."""
         exp_date = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.email_code_expire_minutes
+            minutes=_time
         )
         return exp_date

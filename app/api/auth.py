@@ -3,13 +3,21 @@ from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.schemas.responses import SuccessResponse, ErrorResponse
-from app.services.auth_service import AuthCodeDecoder, AuthUserCredentials, JWTTokenValidator
+from app.schemas.user import VerifyCodeRequest, PasswordCodeRequest
+from app.services.auth_service import (
+    AuthCodeDecoder, 
+    AuthUserCredentials, 
+    JWTTokenValidator,
+    RecoveryAuthCode)
+from app.utils.date_time import TimeUtils
 from app.repositories.user_repo import UserRepository
 from fastapi.templating import Jinja2Templates
 from app.core.i18n import translate
 from app.core.config import settings
 from slowapi.util import get_remote_address
 from app.core.exceptions import limiter
+from app.api.users import get_user_service
+from app.services.user_service import UserService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 templates = Jinja2Templates(directory="app/tmp")
@@ -39,8 +47,7 @@ def login(db: Session = Depends(get_db), user_credentials: OAuth2PasswordRequest
             )
 
 @router.get("/token", status_code=status.HTTP_202_ACCEPTED)
-#@limiter.limit("3/minute")
-async def code_validation(token: str, db: Session = Depends(get_db), request: Request = None, _=Depends(translate)):
+async def email_code_validation(token: str, db: Session = Depends(get_db), request: Request = None, _=Depends(translate)):
     _ = _  # Get the translation function
     
     user_repo = UserRepository(db)
@@ -71,4 +78,47 @@ async def code_validation(token: str, db: Session = Depends(get_db), request: Re
         raise HTTPException(status_code=404, detail="Template not found.")
     except IOError:
         raise HTTPException(status_code=500, detail="Failed to read template.")
+    
+@router.post("/verify-code", status_code=status.HTTP_202_ACCEPTED)
+async def app_code_validation(user_recovery: VerifyCodeRequest, db: Session = Depends(get_db), request: Request = None):
+    user_repo = UserRepository(db)
+    time_utils = TimeUtils()
+    if RecoveryAuthCode(user_repo, time_utils).validate_recovery_code(user_recovery.email, user_recovery.code):
+        return SuccessResponse(
+                    message="Account validated",
+                    meta={
+                        "request_id": request.headers.get("request-id", "default_request_id"),
+                        "client": request.headers.get("client-type", "unknown"),
+                    },
+                )
+    return ErrorResponse(
+                    message="Expired code",
+                    meta={
+                        "request_id": request.headers.get("request-id", "default_request_id"),
+                        "client": request.headers.get("client-type", "unknown"),
+                    },
+                )
 
+@router.post("/user", response_model=SuccessResponse, status_code=status.HTTP_202_ACCEPTED)
+async def password_code(
+    user: PasswordCodeRequest,
+    user_service: UserService = Depends(get_user_service), 
+    request: Request = None):
+    
+    result = await user_service.auth_user(user_email=user.email)
+    if result["status"] == "success":
+        return SuccessResponse(
+                message="Login succeed",
+                data="Waiting for account validation",
+                meta={
+                    "request_id": request.headers.get("request-id", "default_request_id"),
+                    "client": request.headers.get("client-type", "unknown"),
+                },
+            )
+    return ErrorResponse(
+                message="Login failed",
+                meta={
+                    "request_id": request.headers.get("request-id", "default_request_id"),
+                    "client": request.headers.get("client-type", "unknown"),
+                },
+            )
