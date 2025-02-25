@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-container img {
+            max-width: 150px;
+            height: auto;
+        }
+        .header {
+            text-align: center;
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 18px;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .instructions {
+            font-size: 16px;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .email-link {
+            color: #328a36; /* Green color for the link */
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .email-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Logo Section -->
+        <div class="logo-container">
+            <img src="/static/assets/images/logo_color.png" alt="Cookiefy Logo">
+        </div>
+        
+        <!-- Main Content -->
+        <div class="header">{{ message }}</div>
+        <p class="instructions">
+            {% if success %}
+                Your account has been successfully verified. You can now sign in to Cookiefy app.
+                If you have any issues, please contact our support team.
+                <br>
+                <!-- Center the plain email link -->
+                <div style="text-align: center;">
+                    <a href="mailto:{{email}}?subject=Your%20Subject&body=Your%20Message%20Here" class="email-link">{{email}}</a>
+                </div>
+            {% else %}
+                The verification process failed. Please ensure you entered the correct code sent to your email.
+                If the issue persists, the token might have expired. Try requesting a new verification code.            
+            {% endif %}
+        </p>
+    </div>
+</body>
+</html>

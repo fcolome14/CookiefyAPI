@@ -15,6 +15,7 @@ from app.core.config import settings
 from app.core.security import create_access_token
 import logging
 from app.repositories.user_repo import UserRepository
+from app.core.security import hash_password
 
 logger = logging.getLogger(__name__)
 CODE_VALIDATION_ENDPOINT = "/auth/token"
@@ -46,7 +47,7 @@ class UserService:
         
         sent_email = await self._send_auth_email(code, user_input.email)
         if sent_email["status"] == "error":
-            msg = f"Failed to send email"
+            msg = "Failed to send email"
             logger.error(msg)
             return {"status": "error", "message": msg}
 
@@ -121,7 +122,8 @@ class UserService:
 
     def _create_new_user(self, user_input: UserCreate, code: int, code_exp: datetime) -> UserRead | None:
         """Add a new user to the database."""
-        hashed_password = pwd_context.hash(user_input.password)
+        #hashed_password = pwd_context.hash(user_input.password)
+        hashed_password = hash_password(user_input.password)
 
         new_user = User(
             name=user_input.full_name,
