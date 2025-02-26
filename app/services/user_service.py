@@ -15,14 +15,31 @@ import logging
 from app.repositories.user_repo import UserRepository
 from app.core.security import hash_password
 from enum import Enum
+from abc import ABC, abstractmethod
 
 logger = logging.getLogger(__name__)
 CODE_VALIDATION_ENDPOINT = "/auth/token"
+
 class EmailTemplates(Enum):
     NEW_USER = "email_code.html"
     PASSWORD_RECOVERY = "email_pwd_recovery.html"
 
-class UserService:
+class IUserService:
+    """Interface service for managing users."""
+
+    @abstractmethod
+    def create_user(self, user_input: UserCreate) -> UserRead | None:
+        pass
+    
+    @abstractmethod
+    def auth_user(self, user_email: str) -> UserRead | None:
+        pass
+    
+    @abstractmethod
+    def change_password(self, user_email: str, user_new_password: str) -> UserRead | None:
+        pass
+
+class UserService(IUserService):
     """Service for managing user creation."""
 
     def __init__(self, db: Session, auth_code_service: AuthCodeManager, time_utils: TimeUtils):
@@ -189,3 +206,26 @@ class UserService:
             self.db.rollback()
             logger.error("Unexpected error during user creation: %s", exc)
             return {"status": "error", "message": "Unexpected error during user creation"}
+
+class NewUserPassword(IUserService):
+    """Manage user new password."""
+    
+    def __init__(self, db: Session):
+        self.db = db
+        self.user_repo = UserRepository(db)
+    
+    def create_user(self, user_input: UserCreate) -> UserRead | None:
+        raise NotImplementedError("This method is not implemented for NewUserPassword.")
+    
+    def auth_user(self, user_email: str) -> UserRead | None:
+        raise NotImplementedError("This method is not implemented for NewUserPassword.")
+    
+    def change_password(self, user_email: str, user_new_password: str) -> UserRead | None:
+        user: User = self.user_repo.get_user_by_email_or_username(user_email, None)
+        hashed_password = hash_password(user_new_password)
+        user.hashed_password = hashed_password
+        result = self.user_repo.update_user(user)
+        if result:
+            logger.info("User password changed")
+            return {"status": "success", "message": user} 
+        return {"status": "error", "message": "Error while updating in database"} 

@@ -3,7 +3,7 @@ from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.schemas.responses import SuccessResponse, ErrorResponse
-from app.schemas.user import VerifyCodeRequest, PasswordCodeRequest
+from app.schemas.user import VerifyCodeRequest, NewPasswordRequest
 from app.services.auth_service import (
     AuthCodeDecoder, 
     AuthUserCredentials, 
@@ -18,6 +18,7 @@ from slowapi.util import get_remote_address
 from app.core.exceptions import limiter
 from app.api.users import get_user_service
 from app.services.user_service import UserService
+from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 templates = Jinja2Templates(directory="app/tmp")
@@ -25,14 +26,23 @@ templates = Jinja2Templates(directory="app/tmp")
 @router.post("/login", response_model=SuccessResponse, status_code=status.HTTP_202_ACCEPTED)
 @limiter.limit("3/minute", key_func=get_remote_address)
 def login(db: Session = Depends(get_db), user_credentials: OAuth2PasswordRequestForm = Depends(), request: Request = None):
-    
     user_repo = UserRepository(db)
     auth_credentials = AuthUserCredentials(user_repo)
     result = auth_credentials.validate_credentials(user_credentials.username, None, user_credentials.password)
+    
     if result["status"] == "success":
+        jwt = result["message"]["token"]
+        user: User = result["message"]["user"]
+        
         return SuccessResponse(
                 message="Login succeed",
-                data=result["message"],
+                data={
+                    "token": jwt, 
+                    "id": user.id,
+                    "name": user.name, 
+                    "username": user.username,
+                    "email": user.email
+                    },
                 meta={
                     "request_id": request.headers.get("request-id", "default_request_id"),
                     "client": request.headers.get("client-type", "unknown"),
@@ -101,7 +111,7 @@ async def app_code_validation(user_recovery: VerifyCodeRequest, db: Session = De
 
 @router.post("/user", response_model=SuccessResponse, status_code=status.HTTP_202_ACCEPTED)
 async def password_code(
-    user: PasswordCodeRequest,
+    user: NewPasswordRequest,
     user_service: UserService = Depends(get_user_service), 
     request: Request = None):
     

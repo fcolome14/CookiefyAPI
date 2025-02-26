@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.schemas.responses import SuccessResponse, ErrorResponse
-from app.schemas.user import UserCreate
-from app.services.user_service import UserService
+from app.schemas.user import UserCreate, PasswordReset
+from app.services.user_service import UserService, NewUserPassword
 from app.services.auth_service import NumericAuthCode, AuthCodeManager
 from app.utils.date_time import TimeUtils
 from app.models.user import User
@@ -42,6 +42,30 @@ async def create_new_user(
             "email": user.email,
             "username": user.username,
         },
+        meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+    )
+
+@router.post("/change-password", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
+async def change_password(
+    user: PasswordReset,
+    request: Request,
+    db: Session = Depends(get_db)):
+    
+    result = NewUserPassword(db).change_password(user.email, user.new_password)
+    
+    if result["status"] == "error":
+        return ErrorResponse(
+            message="Failed to reset password",
+            meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+        )
+    return SuccessResponse(
+        message="Password reset successfully",
         meta={
             "request_id": request.headers.get("request-id", "default_request_id"),
             "client": request.headers.get("client-type", "unknown"),

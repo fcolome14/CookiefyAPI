@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 
 class UserCreate(BaseModel):
     full_name: str
@@ -10,8 +11,12 @@ class VerifyCodeRequest(BaseModel):
     email: EmailStr
     code: int
     
-class PasswordCodeRequest(BaseModel):
+class NewPasswordRequest(BaseModel):
     email: EmailStr
+
+class PasswordReset(BaseModel):
+    email: EmailStr
+    new_password: str
 
 class UserRead(BaseModel):
     id: int

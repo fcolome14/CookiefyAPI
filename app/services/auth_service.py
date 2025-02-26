@@ -78,10 +78,12 @@ class AuthUserCredentials(AuthCredentials):
     def validate_credentials(self, email: str, username: str, password: str) -> str:
         """Validate user credentials (password)."""
         user: User = self.user_repo.get_user_by_email_or_username(email, username)
+        if not user:
+            return {"status": "error", "message": "Account not found"}
         if not user.is_active:
             return {"status": "error", "message": "Unverified account"}
         if verify_password(password, user.hashed_password):
-            return {"status": "success", "message": self.generate_jwt(user.id)}
+            return {"status": "success", "message": {"token": self.generate_jwt(user.id), "user": user}}
         return {"status": "error", "message": "Unauthorized"}
     
     def generate_jwt(self, id: int) -> str:
