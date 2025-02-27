@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="{{ request.state.language or 'en' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ _("Privacy Policy - %(company)s") | format(company=company) }}</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background: url('/static/assets/images/bg_bali.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    header {
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    .social-media {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+    }
+
+    .social-media a {
+      margin: 0 10px;
+      display: inline-block;
+    }
+
+    .social-media img {
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+      transition: transform 0.3s ease;
+    }
+
+    .social-media img:hover {
+      transform: scale(1.2);
+    }
+    .content {
+      max-width: 900px;
+      margin: 50px auto;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      color: #525151;
+      font-size: 1.75rem;
+      margin-top: 30px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section p {
+      line-height: 1.8;
+      font-size: 1rem;
+    }
+
+    .section ul {
+      padding: 0;
+      margin: 15px 0 0;
+    }
+
+    .section ul li {
+      margin: 10px 0;
+      list-style: none;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .section ul li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #ffcc00;
+    }
+
+    footer {
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: #ffcc00;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>{{ _("Privacy Policy of %(company_formal)s") | format(company_formal=company_formal) }}</h1>
+    <div class="social-media">
+      <a href="https://facebook.com/YoonicApp" target="_blank">
+        <img src="/static/assets/icons/facebook_icon.png" alt="Facebook" title="Facebook">
+      </a>
+      <a href="https://twitter.com/YoonicApp" target="_blank">
+        <img src="/static/assets/icons/X_icon.png" alt="X" title="X">
+      </a>
+      <a href="https://instagram.com/YoonicApp" target="_blank">
+        <img src="/static/assets/icons/instagram_icon.png" alt="Instagram" title="Instagram">
+      </a>
+    </div>
+  </header>
+
+  <div class="content">
+    <section class="section">
+      <h2>{{ _("1. Introduction") }}</h2>
+      <p>{{ _("This Privacy Policy (the “Privacy Policy”) describes how personal data provided by users (the “User” or “Users”) who use the “%(company)s” application (the “Application”) is collected, used, stored, shared, protected, and treated in general, as described in the Terms and Conditions.") | format(company=company) | safe }}</p>
+    </section>
+
+    <section class="section">
+      <h2>{{ _("2. Data Collection and User Responsibility") }}</h2>
+      <p>{{ _("The personal data required is strictly necessary for the use of the Application. The User guarantees the authenticity and truthfulness of the data provided and must keep it up to date to ensure it corresponds to their real situation at all times.") }}</p>
+    </section>
+
+    <section class="section">
+      <h2>{{ _("3. Data Controller") }}</h2>
+      <p>{{ _("The data controller is the Spanish company %(company)s, S.L. (hereinafter, “%(company_formal)s”), with registered office at %(company_address)s.") | format(company=company, company_formal=company_formal, company_address=company_address) }}</p>
+      <p>{{ _("If you have any questions or suggestions regarding the processing of your personal data, you can contact us by email at <a href=\"mailto:%(email)s\">%(email)s</a>.") | format(email=email) | safe }}</p>
+    </section>
+
+    <section class="section">
+      <h2>{{ _("4. Data Processed") }}</h2>
+      <p>{{ _("We will process the data you provide through any form or data entry channel in the Application, or any other means of contact such as email, postal mail, phone calls, or instant messaging.") }}</p>
+    </section>
+
+    <section class="section">
+      <h2>{{ _("5. Legal Bases for Processing") }}</h2>
+      <ul>
+        <li>{{ _("To fulfill a legal obligation;") }}</li>
+        <li>{{ _("For the execution and performance of a contract or for the application of pre-contractual measures in order to provide our services;") }}</li>
+        <li>{{ _("For the satisfaction of legitimate interests we pursue as the data controller;") }}</li>
+        <li>{{ _("When the User has given explicit consent. The User can revoke consent at any time.") }}</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>{{ _("6. Purposes of Data Processing") }}</h2>
+      <ul>
+        <li>{{ _("Registration of the User: To manage your registration or user account, verify the provided information, and facilitate resources and content.") }}</li>
+        <li>{{ _("Use of the Application: To manage user activities, communications, notifications, messages, and recommendations within the app.") }}</li>
+        <li>{{ _("Marketing Communications: To send commercial communications about similar products or services.") }}</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>{{ _("7. Data Retention Period") }}</h2>
+      <p>{{ _("%(company_formal)s will retain your data for the period necessary to fulfill the purposes of the data processing described above, or for legal compliance.") | format(company_formal=company_formal) }}</p>
+    </section>
+
+    <section class="section">
+      <h2>{{ _("8. Sharing Data with Third Parties") }}</h2>
+      <p>{{ _("We do not share personal data with third parties unless required by law or necessary for service provision.") }}</p>
+    </section>
+  </div>
+
+  <footer>
+    <p>
+      {{ _("© %(year)s %(company)s, S.L. All rights reserved.") | format(year=2024, company=company) }}
+    </p>
+    <p><a href="{{ url }}/legal/terms">{{ _("Terms of Service") }}</a></p>
+  </footer>
+
+</body>
+</html>

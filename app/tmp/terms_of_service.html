@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="{{ request.state.language or 'en' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ _("Terms and Conditions - %(company)s") | format(company=company) }}</title>
+  <style>
+    /* Base Styles */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background: url('/static/assets/images/bg_surf.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    header {
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+
+    .social-media {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+    }
+
+    .social-media a {
+      margin: 0 10px;
+      display: inline-block;
+    }
+
+    .social-media img {
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+      transition: transform 0.3s ease;
+    }
+
+    .social-media img:hover {
+      transform: scale(1.2);
+    }
+
+    .content {
+      max-width: 900px;
+      margin: 50px auto;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      color: #525151;
+      font-size: 1.75rem;
+      margin-top: 30px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section p {
+      line-height: 1.8;
+      font-size: 1rem;
+    }
+
+    .section ul {
+      padding: 0;
+      margin: 15px 0 0;
+    }
+
+    .section ul li {
+      margin: 10px 0;
+      list-style: none;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .section ul li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #ffcc00;
+    }
+
+    footer {
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: #ffcc00;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>{{ _("Terms and Conditions of the %(company)s Application") | format(company=company) }}</h1>
+  <div class="social-media">
+    <a href="https://facebook.com/YoonicApp" target="_blank">
+      <img src="/static/assets/icons/facebook_icon.png" alt="Facebook" title="Facebook">
+    </a>
+    <a href="https://twitter.com/YoonicApp" target="_blank">
+      <img src="/static/assets/icons/X_icon.png" alt="X" title="X">
+    </a>
+    <a href="https://instagram.com/YoonicApp" target="_blank">
+      <img src="/static/assets/icons/instagram_icon.png" alt="Instagram" title="Instagram">
+    </a>
+  </div>
+</header>
+
+<div class="content">
+  <section class="section">
+    <p>
+      {{ _("%(company)s, S.L. (hereinafter, “%(company_formal)s”) is a Spanish company, with address for contact purposes at %(company_address)s and Tax Identification Number (N.I.F) %(company_nif)s, duly registered with the Commercial Registry of Barcelona. %(company_formal)s is the owner of all Intellectual and Industrial Property rights or any other rights over the application “%(company)s” (hereinafter, the “Application” or the “App”). Use of the App is subject to the following terms and conditions set forth herein (the “General Terms and Conditions”).") 
+      | format(company=company, company_formal=company_formal, company_address=company_address, company_nif=company_nif) }}
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>{{ _("1. Acceptance") }}</h2>
+    <p>{{ _("By accepting these Terms and Conditions, the User expressly agrees to be bound by the provisions contained herein. The use of the Application implies acceptance and compliance with the terms outlined in these Terms and Conditions.") }}</p>
+  </section>
+
+  <section class="section">
+    <h2>{{ _("2. Purpose of the Application") }}</h2>
+    <p>{{ _("The Application aims to provide registered Users with a platform to create and participate in Activities. These activities enable interaction between Users.") }}</p>
+    <ul>
+      <li>{{ _("Register and create a profile.") }}</li>
+      <li>{{ _("Create and organize Activities.") }}</li>
+      <li>{{ _("Participate in and rate Activities.") }}</li>
+      <li>{{ _("Interact with other Users.") }}</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>{{ _("3. Use of the Application") }}</h2>
+    <p>
+      {{ _("Users agree not to use the Application for illegal or prohibited purposes and to respect the rights and interests of %(company_formal)s and other Users.") 
+      | format(company_formal=company_formal) }}
+    </p>
+    <p>{{ _("The User guarantees that the information provided during registration is accurate and up-to-date.") }}</p>
+  </section>
+
+  <section class="section">
+    <h2>{{ _("4. Intellectual Property Rights") }}</h2>
+    <p>
+      {{ _("All rights to the Application are owned by %(company_formal)s. Users may not use, reproduce, modify, or distribute the Application without express authorization.") 
+      | format(company_formal=company_formal) }}
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>{{ _("5. Links") }}</h2>
+    <p>
+      {{ _("The Application may contain links to third-party websites. %(company_formal)s is not responsible for their content or practices. Users should review the terms and conditions of those sites.") 
+      | format(company_formal=company_formal) }}
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>{{ _("6. Modification of Terms and Conditions") }}</h2>
+    <p>
+      {{ _("%(company_formal)s reserves the right to modify these Terms and Conditions at any time. Users will be informed of any changes.") 
+      | format(company_formal=company_formal) }}
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>{{ _("7. Liability") }}</h2>
+    <p>
+      {{ _("The User is responsible for making proper use of the Application and the content they post. %(company_formal)s is not responsible for any damages arising from the use of the Application.") 
+      | format(company_formal=company_formal) }}
+    </p>
+  </section>
+
+  <footer>
+    <p>
+      {{ _("© %(year)s %(company)s, S.L. All rights reserved.") | format(year=2024, company=company) }}
+    </p>
+    <p><a href="{{ url }}/legal/privacy">{{ _("Privacy Policy") }}</a></p>
+  </footer>
+
+</body>
+</html>

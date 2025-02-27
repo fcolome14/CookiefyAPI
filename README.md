@@ -44,12 +44,43 @@ cp .env.example .env
 ````.env```` Example:
 
 ```bash
+# Project data 
+COMPANY_NAME=Cookiefy
+COMPANY_REG=SL
+COMPANY_ADDRESS=Calle Albasanz 71, 3-2, 28004 Madrid (Spain)
+COMPANY_NIF=<your_company_nif>
+
 # Database Configuration
 DATABASE_URL=postgresql://<fastapi_user>:<strongpassword>@localhost:5432/cookiefyapi_db
 
+# Database Configuration. Use postgres for local container runs and localhost for uvicorn command
+DATABASE_HOSTNAME=localhost
+DATABASE_PORT=5432
+DATABASE_PASSWORD=<your_database_password>
+DATABASE_NAME=<your_database_name>
+DATABASE_USERNAME=<your_database_username>
+
 # Security Settings
-SECRET_KEY=your-secret-key
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+SECRET_KEY=<your_secret_key>
+REFRESH_SECRET_KEY=<your_refresh_secret_key>
+ALGORITHM=<your_algorithm>
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+
+# Email Settings
+EMAIL=<your_email>
+EMAIL_PASSWORD=<your_email_password_token>
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+DOMAIN=<your_server_https_domain>
+EMAIL_AUTH_CODE_EXPIRE_MINUTES=15
+EMAIL_RECOVERY_CODE_EXPIRE_MINUTES=5
+
+# Firebase Credentials File (Path to service account JSON)
+GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
+
+#NUMINATIM GEOCODING API
+NOMINATIM_BASE_URL = https://nominatim.openstreetmap.org
+USER_AGENT = <your_agent_name>
 ```
 
 2. Update the ````.env```` file with your database credentials and app settings.

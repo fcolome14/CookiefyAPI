@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-02-25 12:14+0100\n"
-"PO-Revision-Date: 2025-02-25 12:17+0100\n"
+"POT-Creation-Date: 2025-02-27 12:12+0100\n"
+"PO-Revision-Date: 2025-02-27 12:12+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
 "Language-Team: en <LL@li.org>\n"
@@ -18,50 +18,322 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: app/api/auth.py:50
+#: app/api/auth.py:81
 msgid "Your account has been successfully verified."
-msgstr "Your account has been successfully verified."
+msgstr ""
 
-#: app/api/auth.py:50
+#: app/api/auth.py:81
 msgid "Verification failed."
-msgstr "Verification failed."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:6
+#, python-format
+msgid "Privacy Policy - %(company)s"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:34
+#, python-format
+msgid "Privacy Policy of %(company_formal)s"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:39
+msgid "1. Introduction"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:40
+#, python-format
+msgid ""
+"This Privacy Policy (the “Privacy Policy”) describes how personal data "
+"provided by users (the “User” or “Users”) who use the “%(company)s” "
+"application (the “Application”) is collected, used, stored, shared, "
+"protected, and treated in general, as described in the Terms and Conditions."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:45
+msgid "2. Data Collection and User Responsibility"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:46
+msgid ""
+"The personal data required is strictly necessary for the use of the "
+"Application. The User guarantees the authenticity and truthfulness of the"
+" data provided and must keep it up to date to ensure it corresponds to "
+"their real situation at all times."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:50
+msgid "3. Data Controller"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:51
+#, python-format
+msgid ""
+"The data controller is the Spanish company %(company)s, S.L. "
+"(hereinafter, “%(company_formal)s”), with registered office at "
+"%(company_address)s."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:53
+#, python-format
+msgid ""
+"If you have any questions or suggestions regarding the processing of your"
+" personal data, you can contact us by email at <a "
+"href=\"mailto:%(email)s\">%(email)s</a>."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:58
+msgid "4. Data Processed"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:59
+msgid ""
+"We will process the data you provide through any form or data entry "
+"channel in the Application, or any other means of contact such as email, "
+"postal mail, phone calls, or instant messaging."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:63
+msgid "5. Legal Bases for Processing"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:65
+msgid "To fulfill a legal obligation;"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:66
+msgid ""
+"For the execution and performance of a contract or for the application of"
+" pre-contractual measures in order to provide our services;"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:67
+msgid ""
+"For the satisfaction of legitimate interests we pursue as the data "
+"controller;"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:68
+msgid ""
+"When the User has given explicit consent. The User can revoke consent at "
+"any time."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:73
+msgid "6. Purposes of Data Processing"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:75
+msgid ""
+"Registration of the User: To manage your registration or user account, "
+"verify the provided information, and facilitate resources and content."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:76
+msgid ""
+"Use of the Application: To manage user activities, communications, "
+"notifications, messages, and recommendations within the app."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:77
+msgid ""
+"Marketing Communications: To send commercial communications about similar"
+" products or services."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:82
+msgid "7. Data Retention Period"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:83
+#, python-format
+msgid ""
+"%(company_formal)s will retain your data for the period necessary to "
+"fulfill the purposes of the data processing described above, or for legal"
+" compliance."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:88
+msgid "8. Sharing Data with Third Parties"
+msgstr ""
+
+#: app/tmp/privacy_policy.html:89
+msgid ""
+"We do not share personal data with third parties unless required by law "
+"or necessary for service provision."
+msgstr ""
+
+#: app/tmp/privacy_policy.html:94
+#, python-format
+msgid "© %(year)s %(company_formal)s. All rights reserved."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:6
+#, python-format
+msgid "Terms and Conditions - %(company)s"
+msgstr ""
+
+#: app/tmp/terms_of_service.html:117
+#, python-format
+msgid "Terms and Conditions of the %(company)s Application"
+msgstr ""
+
+#: app/tmp/terms_of_service.html:134
+#, python-format
+msgid ""
+"%(company)s, S.L. (hereinafter, “%(company_formal)s”) is a Spanish "
+"company, with address for contact purposes at %(company_address)s and Tax"
+" Identification Number (N.I.F) %(company_nif)s, duly registered with the "
+"Commercial Registry of Barcelona. %(company_formal)s is the owner of all "
+"Intellectual and Industrial Property rights or any other rights over the "
+"application “%(company)s” (hereinafter, the “Application” or the “App”). "
+"Use of the App is subject to the following terms and conditions set forth"
+" herein (the “General Terms and Conditions”)."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:140
+msgid "1. Acceptance"
+msgstr ""
+
+#: app/tmp/terms_of_service.html:141
+msgid ""
+"By accepting these Terms and Conditions, the User expressly agrees to be "
+"bound by the provisions contained herein. The use of the Application "
+"implies acceptance and compliance with the terms outlined in these Terms "
+"and Conditions."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:145
+msgid "2. Purpose of the Application"
+msgstr ""
+
+#: app/tmp/terms_of_service.html:146
+msgid ""
+"The Application aims to provide registered Users with a platform to "
+"create and participate in Activities. These activities enable interaction"
+" between Users."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:148
+msgid "Register and create a profile."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:149
+msgid "Create and organize Activities."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:150
+msgid "Participate in and rate Activities."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:151
+msgid "Interact with other Users."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:156
+msgid "3. Use of the Application"
+msgstr ""
+
+#: app/tmp/terms_of_service.html:158
+#, python-format
+msgid ""
+"Users agree not to use the Application for illegal or prohibited purposes"
+" and to respect the rights and interests of %(company_formal)s and other "
+"Users."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:161
+msgid ""
+"The User guarantees that the information provided during registration is "
+"accurate and up-to-date."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:165
+msgid "4. Intellectual Property Rights"
+msgstr ""
+
+#: app/tmp/terms_of_service.html:167
+#, python-format
+msgid ""
+"All rights to the Application are owned by %(company_formal)s. Users may "
+"not use, reproduce, modify, or distribute the Application without express"
+" authorization."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:173
+msgid "5. Links"
+msgstr ""
+
+#: app/tmp/terms_of_service.html:175
+#, python-format
+msgid ""
+"The Application may contain links to third-party websites. "
+"%(company_formal)s is not responsible for their content or practices. "
+"Users should review the terms and conditions of those sites."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:181
+msgid "6. Modification of Terms and Conditions"
+msgstr ""
+
+#: app/tmp/terms_of_service.html:183
+#, python-format
+msgid ""
+"%(company_formal)s reserves the right to modify these Terms and "
+"Conditions at any time. Users will be informed of any changes."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:189
+msgid "7. Liability"
+msgstr ""
+
+#: app/tmp/terms_of_service.html:191
+#, python-format
+msgid ""
+"The User is responsible for making proper use of the Application and the "
+"content they post. %(company_formal)s is not responsible for any damages "
+"arising from the use of the Application."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:198
+#, python-format
+msgid "© %(year)s %(company)s, S.L. All rights reserved."
+msgstr ""
+
+#: app/tmp/terms_of_service.html:200
+msgid "Privacy Policy"
+msgstr ""
 
 #: app/tmp/validation_result.html:6
 msgid "Verification Result"
-msgstr "Verification Result"
+msgstr ""
 
 #: app/tmp/validation_result.html:62
 msgid "Cookiefy Logo"
-msgstr "Cookiefy Logo"
+msgstr ""
 
 #: app/tmp/validation_result.html:69
 msgid ""
 "Your account has been successfully verified. You can now sign in to the "
 "Cookiefy app."
 msgstr ""
-"Your account has been successfully verified. You can now sign in to the "
-"Cookiefy app."
 
 #: app/tmp/validation_result.html:70
 msgid "If you have any issues, please contact our support team."
-msgstr "If you have any issues, please contact our support team."
+msgstr ""
 
 #: app/tmp/validation_result.html:73
 msgid "Account Support"
-msgstr "Account Support"
+msgstr ""
 
 #: app/tmp/validation_result.html:76
 msgid ""
 "The verification process failed. Please ensure you entered the correct "
 "code sent to your email."
 msgstr ""
-"The verification process failed. Please ensure you entered the correct "
-"code sent to your email."
 
 #: app/tmp/validation_result.html:77
 msgid ""
-"If the issue persists, the token might have expired. Try requesting a new "
-"verification code."
+"If the issue persists, the token might have expired. Try requesting a new"
+" verification code."
 msgstr ""
-"If the issue persists, the token might have expired. Try requesting a new "
-"verification code."
+

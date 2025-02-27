@@ -10,7 +10,11 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 class Settings(BaseSettings):
     """Database and application settings read from environment variables"""
-
+    
+    company_name: str
+    company_reg: str
+    company_address: str
+    company_nif: str
     database_hostname: str
     database_port: str
     database_password: str
