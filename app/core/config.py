@@ -34,7 +34,8 @@ class Settings(BaseSettings):
     google_application_credentials: str
     nominatim_base_url: str
     user_agent: str
-
+    celery_broker_url: str
+    celery_backend_result: str
     class Config:
         env_file = os.path.join(Path(__file__).resolve().parent.parent, ".env")
         env_file_encoding = "utf-8"
