@@ -9,10 +9,10 @@ celery_app = Celery(
 celery_app.autodiscover_tasks(['app.tasks'])
 
 celery_app.conf.beat_schedule = {
-    "say-hello-every-30s": {
-        "task": "app.tasks.test.say_hello",
+    "scraping-asian-restaurants-bcn": {
+        "task": "app.tasks.scraper.scrap",
         "schedule": settings.beat_scheduler_seconds,
     }
 }
 
-import app.tasks.test # Import the task in case it is not auto-discovered
+import app.tasks.scraper # Import the task in case it is not auto-discovered

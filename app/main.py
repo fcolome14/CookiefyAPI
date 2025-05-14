@@ -10,6 +10,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.core.config import settings
 from slowapi.errors import RateLimitExceeded
 from app.core.exceptions import rate_limit_handler, limiter
+from app.db.seed import Seed
+from app.db.session import get_db
 
 Base.metadata.create_all(bind=engine)
 
@@ -28,6 +30,11 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 # Static files and templates
 app.mount("/static", StaticFiles(directory="app/tmp"), name="static")
 templates = Jinja2Templates(directory="app/tmp")
+
+@app.on_event("startup")
+async def seed_database():
+    db = next(get_db())
+    Seed.seed_data(db)
 
 app.include_router(users.router)
 app.include_router(auth.router)
