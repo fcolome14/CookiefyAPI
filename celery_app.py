@@ -11,7 +11,7 @@ celery_app.autodiscover_tasks(['app.tasks'])
 celery_app.conf.beat_schedule = {
     "say-hello-every-30s": {
         "task": "app.tasks.test.say_hello",
-        "schedule": settings.beat_scheduler_second,
+        "schedule": settings.beat_scheduler_seconds,
     }
 }
 
