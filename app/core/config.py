@@ -11,6 +11,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 class Settings(BaseSettings):
     """Database and application settings read from environment variables"""
     
+    project_name: str
     company_name: str
     company_reg: str
     company_address: str
@@ -36,6 +37,7 @@ class Settings(BaseSettings):
     user_agent: str
     celery_broker_url: str
     celery_backend_result: str
+    beat_scheduler_second: float
     class Config:
         env_file = os.path.join(Path(__file__).resolve().parent.parent, ".env")
         env_file_encoding = "utf-8"

@@ -2,17 +2,16 @@ from celery import Celery
 from app.core.config import settings
 
 celery_app = Celery(
-    "cookiefyapi",
+    settings.project_name,
     broker=settings.celery_broker_url,
     backend=settings.celery_backend_result,
 )
-
 celery_app.autodiscover_tasks(['app.tasks'])
 
 celery_app.conf.beat_schedule = {
     "say-hello-every-30s": {
         "task": "app.tasks.test.say_hello",
-        "schedule": 30.0,
+        "schedule": settings.beat_scheduler_second,
     }
 }
 
