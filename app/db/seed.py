@@ -1,12 +1,13 @@
 """ Load static data to database """
-
+import os
 from sqlalchemy.orm import Session
 from app.models.category import Category
 from app.models.hashtag import Hashtag
+from app.models.image import Image
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
-
+STATIC_IMG_DIR = "app/static/images"
 
 class Seed:
     @staticmethod
@@ -16,6 +17,9 @@ class Seed:
 
         if db.query(Hashtag).count() == 0:
             Seed.add_hashtags(db)
+        
+        if db.query(Image).count() == 0:
+            Seed.add_images(db)
 
 
     @staticmethod
@@ -34,6 +38,25 @@ class Seed:
         for category in category_models:
             db.refresh(category)
         logger.info(f"Added {len(category_models)} categories.")
+    
+    
+    @staticmethod
+    def add_images(db: Session):
+        
+        for filename in os.listdir(STATIC_IMG_DIR):
+            if not filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                continue
+
+            filepath = os.path.join(STATIC_IMG_DIR, filename)
+            with open(filepath, 'rb') as f:
+                image_data = f.read()
+
+            image = Image(name=filename, data=image_data)
+            db.add(image)
+
+        db.commit()
+        db.close()
+        logger.info("Added default images successfully")
 
 
     @staticmethod
