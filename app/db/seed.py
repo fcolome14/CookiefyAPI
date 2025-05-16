@@ -75,6 +75,7 @@ class Seed:
             {"name": "Cocktails"},
             {"name": "Japanese"},
             {"name": "Chinese"},
+            {"name": "Catalan"},
             {"name": "Thai"},
             {"name": "Vietnamese"},
             {"name": "Korean"},

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from app.db.base import Base
+from sqlalchemy.orm import relationship
 
 class Hashtag(Base):
     __tablename__ = "hashtags"
@@ -11,3 +12,5 @@ class Hashtag(Base):
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=True, server_default=text("now()")
     )
+    
+    sites = relationship("Site", secondary="site_hashtag_association", back_populates="hashtags")

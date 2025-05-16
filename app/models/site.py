@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from app.db.base import Base
+from sqlalchemy.orm import relationship
 
 class Site(Base):
     __tablename__ = "sites"
@@ -19,3 +20,6 @@ class Site(Base):
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=True, server_default=text("now()")
     )
+    
+    lists = relationship("List", secondary="list_site_association", back_populates="sites")
+    hashtags = relationship("Hashtag", secondary="site_hashtag_association", back_populates="sites")
