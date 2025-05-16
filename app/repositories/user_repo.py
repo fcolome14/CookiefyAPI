@@ -27,11 +27,17 @@ class UserRepository(IUserRepository):
 
     def get_user_by_email_or_username(self, email: str, username: str) -> User | None:
         """Fetch a user by email or username."""
+        if email:
+            return (
+                self.db.query(User)
+                .filter(User.email == email)
+                .first()
+            )
         return (
-            self.db.query(User)
-            .filter(or_(User.email == email, User.username == username))
-            .first()
-        )
+                self.db.query(User)
+                .filter(User.username == username)
+                .first()
+            )
     
     def add_user(self, user: User) -> User | None:
         """Fetch a user by email or username."""

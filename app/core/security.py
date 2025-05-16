@@ -32,3 +32,9 @@ def decode_access_token(token: str) -> dict | None:
         return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     except JWTError:
         return None
+
+def get_current_user(token: str) -> int| None:
+    payload = decode_access_token(token)
+    if not payload:
+        return payload
+    return payload["id"]

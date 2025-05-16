@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.sql.expression import text
-from app.db.base import Base
 from sqlalchemy.orm import relationship
+from app.db.base import Base
+from app.models.associations import site_hashtag_association
 
 class Hashtag(Base):
     __tablename__ = "hashtags"
@@ -13,4 +14,5 @@ class Hashtag(Base):
         TIMESTAMP(timezone=True), nullable=True, server_default=text("now()")
     )
     
-    sites = relationship("Site", secondary="site_hashtag_association", back_populates="hashtags")
+from app.models.site import Site  # avoid circular issues by importing here  # noqa: E402
+Hashtag.sites = relationship("Site", secondary=site_hashtag_association, back_populates="hashtags")

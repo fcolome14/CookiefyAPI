@@ -1,7 +1,7 @@
 # app/main.py
 
 from fastapi import FastAPI, Request
-from app.api import users, auth, legal
+from app.api import (users, auth, legal, posts)
 from app.db.session import Base, engine
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -39,3 +39,4 @@ async def seed_database():
 app.include_router(users.router)
 app.include_router(auth.router)
 app.include_router(legal.router)
+app.include_router(posts.router)

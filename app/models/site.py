@@ -3,6 +3,8 @@ from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from app.db.base import Base
 from sqlalchemy.orm import relationship
+from app.models.associations import site_hashtag_association, list_site_association
+from app.models.lists import List
 
 class Site(Base):
     __tablename__ = "sites"
@@ -15,11 +17,12 @@ class Site(Base):
 
     image = Column(Integer, ForeignKey("images.id"), nullable=True)
     category = Column(Integer, ForeignKey("categories.id"), nullable=True)
-    hashtags = Column(Integer, ForeignKey("hashtags.id"), nullable=True)
+    hashtags = relationship("Hashtag", secondary=site_hashtag_association, back_populates="sites")
 
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=True, server_default=text("now()")
     )
     
-    lists = relationship("List", secondary="list_site_association", back_populates="sites")
-    hashtags = relationship("Hashtag", secondary="site_hashtag_association", back_populates="sites")
+from app.models.hashtag import Hashtag  # noqa: E402
+Site.hashtags = relationship("Hashtag", secondary=site_hashtag_association, back_populates="sites")
+Site.lists = relationship("List", secondary=list_site_association, back_populates="sites")

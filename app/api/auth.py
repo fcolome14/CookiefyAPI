@@ -28,7 +28,7 @@ templates = Jinja2Templates(directory="app/tmp")
 def login(db: Session = Depends(get_db), user_credentials: OAuth2PasswordRequestForm = Depends(), request: Request = None):
     user_repo = UserRepository(db)
     auth_credentials = AuthUserCredentials(user_repo)
-    result = auth_credentials.validate_credentials(user_credentials.username, None, user_credentials.password)
+    result = auth_credentials.validate_credentials(None, user_credentials.username, user_credentials.password)
     
     if result["status"] == "success":
         jwt = result["message"]["token"]
