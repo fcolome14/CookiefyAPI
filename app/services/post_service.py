@@ -91,40 +91,55 @@ class PostService(IPostService):
             logger.error("Unexpected error during user creation: %s", exc)
             return {"status": "error", "message": "Unexpected error during user creation"}
     
-    def _update_list(self, list_obj: List, list_new: ListUpdate) -> bool:
-        """Updates a list."""
+    def _update_list(self, list_obj: List, list_new: ListUpdate) -> dict:
+        """Updates a list record, including list_site_association."""
         updated = False
-        result = {"status": "error", "message": None}
-        
+        result = {"status": "error", "message": None, "payload": None}
+        site_update_required = False
+
         updates = list_new.model_dump(exclude_unset=True)
         updates.pop("id", None)
         updates.pop("image", None)
-        
+
+        incoming_site_ids = set(updates.pop("sites", []))
+        if not self.post_repo.check_sites_id(incoming_site_ids):
+            result["payload"] = "Invalid site IDs provided"
+            return result
+
+        current_site_ids = set(self.post_repo.get_site_ids_from_list(list_obj.id))
+        if current_site_ids != incoming_site_ids:
+            site_update_required = True
+            updated = True
+
         for field, new_value in updates.items():
-            old_value = getattr(list_obj, field)
-            
-            if field == "sites":
-                current_site_ids = {site.id for site in list_obj.sites}
-                incoming_site_ids = set(new_value)
-                
-                if current_site_ids != incoming_site_ids:
-                    pass
-            
-            elif old_value != new_value:
+            old_value = getattr(list_obj, field, None)
+            if old_value != new_value:
                 setattr(list_obj, field, new_value)
                 updated = True
-        
+
         if updated:
             result = self.post_repo.update_list(list_obj)
-            if result["status"] == "success":
-                logger.info("List updated successfully with ID %d", list_obj.id)
-        else:
+
+        if site_update_required:
+            success = self.post_repo.update_list_site_association(
+                list_id=list_obj.id,
+                new_site_ids=list(incoming_site_ids)
+            )
+            if not success:
+                result = {
+                    "status": "error",
+                    "message": "Failed to update site associations"
+                }
+
+        if result["status"] == "success":
+            logger.info("List updated successfully with ID %d", list_obj.id)
+        elif not updated:
             logger.info("No changes detected for list ID %d", list_obj.id)
-            
+
         return {
-            "status": result.get("status", "success"), 
-            "updated": updated, 
-            "payload": result.get("message", list_obj)
+            "status": result.get("status", "success"),
+            "updated": updated,
+            "payload": result.get("message", list_obj),
         }
                 
         
