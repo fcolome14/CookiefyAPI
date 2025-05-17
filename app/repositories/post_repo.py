@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_, select, insert, delete
-from app.models.lists import List
+from app.models.lists import List as ListModel
+from app.schemas.post import ListDelete
 from app.models.site import Site
 from app.models.user import User
 from app.models.associations import list_site_association
 from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
+from typing import Union, List, Optional
 
 class IPostRepository(ABC):
     """Interface for post repository operations"""
@@ -24,19 +26,47 @@ class PostRepository(IPostRepository):
     def __init__(self, db: Session):
         self.db = db
 
-    def get_list_by_name(self, user_id: int, list_name: str) -> User | None:
+    def get_list_by_name(self, user_id: int, list_name: str) -> ListModel | None:
         """Fetch a list by user_id."""
         return (
-            self.db.query(List)
-            .filter(and_(User.id == user_id, List.name == list_name, List.is_banned == False))  # noqa: E712
+            self.db.query(ListModel)
+            .filter(and_(User.id == user_id, ListModel.name == list_name, ListModel.is_banned == False))  # noqa: E712
             .first()
         )
     
-    def get_list_by_id(self, list_id: int) -> List | None:
+    def get_list_by_id(self, list_id: Union[int, List[int]]) -> ListModel | None:
         """Fetch a list by list_id."""
+        if isinstance(list_id, list):
+            return (
+                self.db.query(ListModel)
+                .filter(ListModel.id.in_(list_id), List.is_banned == False)  # noqa: E712
+                .all()
+            )
         return (
-            self.db.query(List)
-            .filter(List.id == list_id, List.is_banned == False)  # noqa: E712
+            self.db.query(ListModel)
+            .filter(ListModel.id == list_id, ListModel.is_banned == False)  # noqa: E712
+            .first()
+        )
+    
+    def get_list_by_user_id(
+        self, user_id: int, 
+        list_id: Union[int, List[int]]) -> Union[ListModel, List[ListModel], None]:
+        """Fetch a list by user_id."""
+        if isinstance(list_id, list):
+            return (
+                self.db.query(ListModel)
+                .filter(
+                    ListModel.id.in_(list_id), 
+                    ListModel.is_banned == False,  # noqa: E712
+                    ListModel.owner == user_id)
+                .all()
+            )
+        return (
+            self.db.query(ListModel)
+            .filter(
+                ListModel.id == list_id, 
+                ListModel.is_banned == False, # noqa: E712
+                ListModel.owner == user_id)
             .first()
         )
     
@@ -62,12 +92,6 @@ class PostRepository(IPostRepository):
     def update_list_site_association(self, list_id: int, new_site_ids: list[int]) -> bool:
         """Update the list_site_association table for a given list_id."""
         try:
-            # Step 1: Delete existing site associations for the list
-            # delete_stmt = delete(list_site_association).where(
-            #     list_site_association.c.list_id == list_id
-            # )
-            # self.db.execute(delete_stmt)
-
             if new_site_ids:
                 insert_values = [
                     {"list_id": list_id, "site_id": site_id}
@@ -83,16 +107,29 @@ class PostRepository(IPostRepository):
             self.db.rollback()
             print("Error updating list_site_association for list %d: %s", list_id, e)
             return False
+    
+    def delete_list_site_association(self, list_id: ListDelete) -> bool:
+        """Delete all associations for a given list_id."""
+        try:
+            delete_stmt = delete(list_site_association).where(
+                list_site_association.c.list_id == list_id
+            )
+            self.db.execute(delete_stmt)
+            self.db.commit()
+            return True
+        except Exception as e:
+            self.db.rollback()
+            print("Error deleting list_site_association for list %d: %s", list_id, e)
+            return False
 
-
-    def add_list(self, list_obj: List) -> List | None:
+    def add_list(self, list_obj: ListModel) -> ListModel | None:
         """Add a new list."""
         self.db.add(list_obj)
         self.db.commit()
         self.db.refresh(list_obj)
-        return list
+        return list_obj
     
-    def update_list(self, list_obj: List) -> List | None:
+    def update_list(self, list_obj: ListModel) -> ListModel | None:
         """Update a list record."""
         try:
             self.db.commit()
