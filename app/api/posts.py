@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.schemas.responses import SuccessResponse, ErrorResponse
-from app.schemas.post import ListCreate, ListUpdate, SitesDelete
+from app.schemas.post import ListCreate, ListUpdate, ListDelete
 from app.services.post_service import PostService
 from app.models.lists import List
 from app.core.security import get_current_user
@@ -85,30 +85,26 @@ async def update_list(
 
 @router.delete("/delete-list", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
 async def delete_list(
-    sites_delete: SitesDelete,
+    list_delete: ListDelete,
     request: Request,
     user_id: int = Depends(get_current_user),
     post_service: PostService = Depends(get_post_service),
 ):
     """Endpoint to delete lists."""
-    list_result = await post_service.delete_list(user_id, sites_delete)
+    list_result = await post_service.delete_list(user_id, list_delete)
 
     if list_result["status"] == "error":
         return ErrorResponse(
-            message=list_result["payload"],
+            message=list_result["message"],
             meta={
             "request_id": request.headers.get("request-id", "default_request_id"),
             "client": request.headers.get("client-type", "unknown"),
         },
         )
     
-    list: List = list_result["payload"]
     return SuccessResponse(
-        message="List updated successfully.",
-        data={
-            "id": list.id,
-            "name": list.name,
-        },
+        message=f"List {list_delete} deleted successfully.",
+        data={},
         meta={
             "request_id": request.headers.get("request-id", "default_request_id"),
             "client": request.headers.get("client-type", "unknown"),

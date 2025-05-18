@@ -3,6 +3,7 @@ from jose import jwt, JWTError
 from app.core.config import settings
 from app.utils.date_time import TimeUtils
 import bcrypt
+from fastapi import HTTPException, status
 
 # Password Hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -36,5 +37,9 @@ def decode_access_token(token: str) -> dict | None:
 def get_current_user(token: str) -> int| None:
     payload = decode_access_token(token)
     if not payload:
-        return payload
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return payload["id"]

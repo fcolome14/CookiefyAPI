@@ -1,31 +1,77 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_, select, insert, delete
 from app.models.lists import List as ListModel
-from app.schemas.post import ListDelete
+from app.schemas.post import ListDelete, ListCreate
 from app.models.site import Site
 from app.models.user import User
 from app.models.associations import list_site_association
 from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Union, List, Optional
+from sqlalchemy.exc import IntegrityError
 
 class IPostRepository(ABC):
     """Interface for post repository operations"""
     
     @abstractmethod
-    def add_list(self, user: User) -> User:
+    def add_list(self, user_id: int, list_input: ListModel) -> User:
         pass
     
     @abstractmethod
-    def update_list(self, user: User) -> User:
+    def update_list(self, list_id: int, new_site_ids: list[int]) -> bool:
         pass
-
+    
+    @abstractmethod
+    def delete_list(self, list_id: Union[int, List[int]]) -> dict:
+        pass
+    
+    @abstractmethod
+    def get_list_by_name(self, user_id: int, list_name: str) -> ListModel | None:
+        pass
+    
+    @abstractmethod
+    def get_list_by_id(self, list_id: Union[int, List[int]]) -> ListModel | None:
+        pass
+    
+    @abstractmethod
+    def get_list_by_user_id(self, user_id: int, list_id: Union[int, List[int]]) -> Union[ListModel, List[ListModel], None]:
+        pass
+    
+    @abstractmethod
+    def check_sites_id(self, sites_id: list[int]) -> bool | None:
+        pass
+    
 class PostRepository(IPostRepository):
     """Repository for post-related database operations."""
 
     def __init__(self, db: Session):
         self.db = db
+        
+    def add_list(self, user_id: int, list_input: ListModel) -> ListModel:
+        """Create a new list."""
+        new_list = ListModel(
+            name=list_input.name,
+            description=list_input.description,
+            owner=user_id,
+            accepts_contributions=list_input.accepts_contributions,
+            is_public=list_input.is_public,
+        )
 
+        try:
+            self.db.add(new_list)
+            self.db.commit()
+            self.db.refresh(new_list)
+            print("List created successfully with ID %d", new_list.id)
+            return {"status": "success", "message": new_list}
+        except IntegrityError:
+            self.db.rollback()
+            print("Failed to create list: List already exists")
+            return {"status": "error", "message": "Failed to create list: List already exists"}
+        except Exception as exc:
+            self.db.rollback()
+            print("Unexpected error during user creation: %s", exc)
+            return {"status": "error", "message": "Unexpected error during user creation"}
+    
     def get_list_by_name(self, user_id: int, list_name: str) -> ListModel | None:
         """Fetch a list by user_id."""
         return (
@@ -39,7 +85,7 @@ class PostRepository(IPostRepository):
         if isinstance(list_id, list):
             return (
                 self.db.query(ListModel)
-                .filter(ListModel.id.in_(list_id), List.is_banned == False)  # noqa: E712
+                .filter(ListModel.id.in_(list_id), ListModel.is_banned == False)  # noqa: E712
                 .all()
             )
         return (
@@ -108,26 +154,34 @@ class PostRepository(IPostRepository):
             print("Error updating list_site_association for list %d: %s", list_id, e)
             return False
     
-    def delete_list_site_association(self, list_id: ListDelete) -> bool:
-        """Delete all associations for a given list_id."""
+    def delete_list(self, list_id: Union[int, List[int]]) -> dict:
+        """Delete one or more lists and their site associations by ID(s)."""
         try:
-            delete_stmt = delete(list_site_association).where(
-                list_site_association.c.list_id == list_id
+            if not isinstance(list_id, list):
+                list_id = [list_id]
+
+            assoc_delete_stmt = delete(list_site_association).where(
+                list_site_association.c.list_id.in_(list_id)
             )
-            self.db.execute(delete_stmt)
+            self.db.execute(assoc_delete_stmt)
+
+            lists_to_delete = (
+                self.db.query(ListModel)
+                .filter(ListModel.id.in_(list_id))
+                .all()
+            )
+
+            if not lists_to_delete:
+                return {"status": "error", "message": f"No lists found with ID(s): {list_id}"}
+
+            for obj in lists_to_delete:
+                self.db.delete(obj)
+
             self.db.commit()
-            return True
+            return {"status": "success", "message": f"Deleted lists and associations for IDs: {list_id}"}
         except Exception as e:
             self.db.rollback()
-            print("Error deleting list_site_association for list %d: %s", list_id, e)
-            return False
-
-    def add_list(self, list_obj: ListModel) -> ListModel | None:
-        """Add a new list."""
-        self.db.add(list_obj)
-        self.db.commit()
-        self.db.refresh(list_obj)
-        return list_obj
+            return {"status": "error", "message": f"Error deleting list(s) {list_id}: {e}"}
     
     def update_list(self, list_obj: ListModel) -> ListModel | None:
         """Update a list record."""
