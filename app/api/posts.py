@@ -102,8 +102,13 @@ async def delete_list(
         },
         )
     
+    if len(list_delete.id) > 1:
+        message=f"Lists {', '.join(list_delete.id)} deleted successfully."
+    else:
+        message=f"List {list_delete.id} deleted successfully."  
+        
     return SuccessResponse(
-        message=f"List {list_delete} deleted successfully.",
+        message=message,
         data={},
         meta={
             "request_id": request.headers.get("request-id", "default_request_id"),
