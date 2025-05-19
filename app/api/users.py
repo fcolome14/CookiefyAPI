@@ -48,7 +48,7 @@ async def create_new_user(
         },
     )
 
-@router.post("/change-password", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
+@router.put("/change-password", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
 async def change_password(
     user: PasswordReset,
     request: Request,

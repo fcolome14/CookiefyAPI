@@ -18,9 +18,8 @@ class ListUpdate(BaseModel):
     accepts_contributions: bool
     is_public: bool
 
-class SitesDelete(BaseModel):
-    id: int
-    sites: list[int]
+class ListDelete(BaseModel):
+    id: list[int]
 
 class PostRead(BaseModel):
     id: int

@@ -1,11 +1,10 @@
 from sqlalchemy.orm import Session
 from app.models.lists import List as ListModel
-from app.schemas.post import PostRead, ListCreate, ListUpdate, SitesDelete
+from app.schemas.post import PostRead, ListCreate, ListUpdate, ListDelete
 from app.services.auth_service import AuthCodeManager
 from app.utils.date_time import TimeUtils
 import logging
 from app.repositories.post_repo import PostRepository
-from sqlalchemy.exc import IntegrityError
 from abc import ABC, abstractmethod
 from typing import Union, List, Optional
 
@@ -78,26 +77,8 @@ class PostService(IPostService):
     
     def _create_new_list(self, user_id: int, list_input: ListCreate) -> bool:
         """Creates a new list."""
-        new_list = ListModel(
-            name=list_input.name,
-            description=list_input.description,
-            owner=user_id,
-            accepts_contributions=list_input.accepts_contributions,
-            is_public=list_input.is_public,
-        )
-
-        try:
-            list = self.post_repo.add_list(new_list)
-            logger.info("List created successfully with ID %d", list.id)
-            return {"status": "success", "message": list}
-        except IntegrityError:
-            self.db.rollback()
-            logger.error("Failed to create list: List already exists")
-            return {"status": "error", "message": "Failed to create list: List already exists"}
-        except Exception as exc:
-            self.db.rollback()
-            logger.error("Unexpected error during user creation: %s", exc)
-            return {"status": "error", "message": "Unexpected error during user creation"}
+        
+        return self.post_repo.add_list(user_id, list_input)
     
     def _update_list(self, list_obj: ListModel, list_new: ListUpdate) -> dict:
         """Updates a list record, including list_site_association."""
@@ -150,26 +131,27 @@ class PostService(IPostService):
             "payload": result.get("message", list_obj),
         }
     
-    def _delete_list(self, sites_id: List[int]) -> PostRead | None:
-        """Delete existing site(s)."""
-        
-        return self.post_repo.delete_list(user_id, list_input.id)
-    
-    def delete_list(self, user_id: int, sites_delete: SitesDelete) -> PostRead | None:
+    def _delete_list(self, list_id: Union[int, List[int]]) -> PostRead | None:
         """Delete existing list(s)."""
-        fetched_list = self._check_list_object(sites_delete.id)
+        
+        return self.post_repo.delete_list(list_id)
+    
+    async def delete_list(self, user_id: int, list_delete: ListDelete) -> PostRead | None:
+        """Delete existing list(s)."""
+        
+        fetched_list = self._check_list_object(list_delete.id)
         if not fetched_list:
-            msg = "List not found"
+            msg = "Deletion not allowed: List not found"
             logger.error(msg)
             return {"status": "error", "message": msg}
         
-        fetched_list = self._check_list_owner(user_id, sites_delete.id)
+        fetched_list = self._check_list_owner(user_id, list_delete.id)
         if not fetched_list:
             msg = "Deletion not allowed: List does not belong to the user"
             logger.error(msg)
             return {"status": "error", "message": msg}
         
-        return self._delete_list(sites_delete.sites)
+        return self._delete_list(list_delete.id)
     
     
     async def update_list(self, user_id: int, list_input: ListUpdate) -> PostRead | None:
