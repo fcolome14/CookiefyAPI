@@ -1,6 +1,11 @@
 from sqlalchemy.orm import Session
 from app.models.lists import List as ListModel
-from app.schemas.post import PostRead, ListCreate, ListUpdate, ListDelete
+from app.schemas.post import (
+    PostRead, 
+    ListCreate, 
+    ListUpdate, 
+    ListDelete, 
+    ListRead)
 from app.services.auth_service import AuthCodeManager
 from app.utils.date_time import TimeUtils
 import logging
@@ -63,14 +68,14 @@ class PostService(IPostService):
     
     def _check_list_object(self, list_id: Union[int, List[int]]) -> bool:
         """Check if a `list` or array of `list` objects already exists."""
-        existing_list = self.post_repo.get_list_by_id(list_id=list_id)
+        existing_list = self.post_repo.get_list_by_list_id(list_id=list_id)
         if existing_list:
             return existing_list
         return None
     
     def _check_list_owner(self, user_id: int, list_id: Union[int, List[int]]) -> bool:
         """Check if a `list` or array of `list` objects are from a giver user."""
-        fetched_list = self.post_repo.get_list_by_user_id(user_id=user_id, list_id=list_id)
+        fetched_list = self.post_repo.get_specific_list(user_id=user_id, list_id=list_id)
         if fetched_list:
             return fetched_list
         return None
@@ -151,8 +156,7 @@ class PostService(IPostService):
             logger.error(msg)
             return {"status": "error", "message": msg}
         
-        return self._delete_list(list_delete.id)
-    
+        return self._delete_list(list_delete.id)    
     
     async def update_list(self, user_id: int, list_input: ListUpdate) -> PostRead | None:
         """Update an existing list."""
@@ -165,9 +169,10 @@ class PostService(IPostService):
         return self._update_list(fetched_list, list_input)
     
     
-    def get_list(self) -> PostRead | None:
-        pass
-    
+    async def get_list(self, user_id: int) -> PostRead | None:
+        fetched_lists = self.post_repo.get_lists_from_user_id(user_id=user_id)
+        serialized = [ListRead.model_validate(lst) for lst in fetched_lists]
+        return {"status": "success", "lists": serialized}
     
     def get_site(self) -> PostRead | None:
         pass

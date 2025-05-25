@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, and_, select, insert, delete
 from app.models.lists import List as ListModel
 from app.schemas.post import ListDelete, ListCreate
@@ -30,11 +30,15 @@ class IPostRepository(ABC):
         pass
     
     @abstractmethod
-    def get_list_by_id(self, list_id: Union[int, List[int]]) -> ListModel | None:
+    def get_list_by_list_id(self, list_id: Union[int, List[int]]) -> ListModel | None:
+        pass
+
+    @abstractmethod
+    def get_lists_from_user_id(self, list_id: Union[int, List[int]]) -> ListModel | None:
         pass
     
     @abstractmethod
-    def get_list_by_user_id(self, user_id: int, list_id: Union[int, List[int]]) -> Union[ListModel, List[ListModel], None]:
+    def get_specific_list(self, user_id: int, list_id: Union[int, List[int]]) -> Union[ListModel, List[ListModel], None]:
         pass
     
     @abstractmethod
@@ -73,15 +77,15 @@ class PostRepository(IPostRepository):
             return {"status": "error", "message": "Unexpected error during user creation"}
     
     def get_list_by_name(self, user_id: int, list_name: str) -> ListModel | None:
-        """Fetch a list by user_id."""
+        """Fetch an active list by user_id."""
         return (
             self.db.query(ListModel)
             .filter(and_(User.id == user_id, ListModel.name == list_name, ListModel.is_banned == False))  # noqa: E712
             .first()
         )
     
-    def get_list_by_id(self, list_id: Union[int, List[int]]) -> ListModel | None:
-        """Fetch a list by list_id."""
+    def get_list_by_list_id(self, list_id: Union[int, List[int]]) -> ListModel | None:
+        """Fetch an active list(s) by list_id."""
         if isinstance(list_id, list):
             return (
                 self.db.query(ListModel)
@@ -94,10 +98,10 @@ class PostRepository(IPostRepository):
             .first()
         )
     
-    def get_list_by_user_id(
+    def get_specific_list(
         self, user_id: int, 
         list_id: Union[int, List[int]]) -> Union[ListModel, List[ListModel], None]:
-        """Fetch a list by user_id."""
+        """Fetch an active list(s) by user_id."""
         if isinstance(list_id, list):
             return (
                 self.db.query(ListModel)
@@ -114,6 +118,19 @@ class PostRepository(IPostRepository):
                 ListModel.is_banned == False, # noqa: E712
                 ListModel.owner == user_id)
             .first()
+        )
+    
+    def get_lists_from_user_id(self, user_id: int) -> list[ListModel]:
+        return (
+            self.db.query(ListModel)
+            .options(
+                joinedload(ListModel.sites).joinedload(Site.hashtags)
+            )
+            .filter(
+                ListModel.is_banned == False,
+                ListModel.owner == user_id
+            )
+            .all()
         )
     
     def check_sites_id(self, sites_id: list[int]) -> bool | None:

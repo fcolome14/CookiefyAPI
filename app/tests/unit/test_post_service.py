@@ -27,7 +27,7 @@ async def test_create_list_duplicate(mock_post_service):
 
 def test_update_list_with_invalid_sites(mock_post_service):
     service, repo = mock_post_service
-    repo.get_list_by_id.return_value = ListModel(id=1, name="List", owner=1)
+    repo.get_list_by_list_id.return_value = ListModel(id=1, name="List", owner=1)
     repo.get_site_ids_from_list.return_value = [1, 2]
     repo.check_sites_id.return_value = False
 
@@ -44,7 +44,7 @@ def test_update_list_with_invalid_sites(mock_post_service):
         "image": "https://example.com/image.jpg"
     })
 
-    result = service._update_list(repo.get_list_by_id.return_value, update_payload)
+    result = service._update_list(repo.get_list_by_list_id.return_value, update_payload)
 
     assert result["status"] == "error"
     assert "Invalid site IDs" in result["payload"]

@@ -51,7 +51,7 @@ async def create_new_list(
     )
 
 
-@router.put("/update-list", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
+@router.put("/update-list", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
 async def update_list(
     list: ListUpdate,
     request: Request,
@@ -83,7 +83,7 @@ async def update_list(
         },
     )
 
-@router.delete("/delete-list", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
+@router.delete("/delete-list", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
 async def delete_list(
     list_delete: ListDelete,
     request: Request,
@@ -91,11 +91,11 @@ async def delete_list(
     post_service: PostService = Depends(get_post_service),
 ):
     """Endpoint to delete lists."""
-    list_result = await post_service.delete_list(user_id, list_delete)
+    result = await post_service.delete_list(user_id, list_delete)
 
-    if list_result["status"] == "error":
+    if result["status"] == "error":
         return ErrorResponse(
-            message=list_result["message"],
+            message=result["message"],
             meta={
             "request_id": request.headers.get("request-id", "default_request_id"),
             "client": request.headers.get("client-type", "unknown"),
@@ -110,6 +110,33 @@ async def delete_list(
     return SuccessResponse(
         message=message,
         data={},
+        meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+    )
+
+@router.get("/get-list", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
+async def get_list(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    post_service: PostService = Depends(get_post_service),
+):
+    """Endpoint to get all lists from a user."""
+    result = await post_service.get_list(user_id)
+
+    if result["status"] == "error":
+        return ErrorResponse(
+            message=result["message"],
+            meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+        )
+        
+    return SuccessResponse(
+        message=None,
+        data={"lists": result["lists"]},
         meta={
             "request_id": request.headers.get("request-id", "default_request_id"),
             "client": request.headers.get("client-type", "unknown"),
