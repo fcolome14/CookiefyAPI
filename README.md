@@ -1,305 +1,388 @@
-# 📖 **CookiefyAPI - FastAPI Social Media Project**
+📖 **CookiefyAPI - FastAPI Social Media Project**
+=================================================
 
-Welcome to **CookiefyAPI**, a FastAPI-based social media project. This guide provides step-by-step instructions to set up the development environment, manage dependencies with Poetry, and run the application with PostgreSQL and Alembic.
+Welcome to **CookiefyAPI**, a FastAPI-based social media project. This guide provides step-by-step instructions to set up the development environment using Poetry, connect to PostgreSQL, manage Alembic migrations, and run the application.
 
----
+* * * * *
 
-## 🚀 **Table of Contents**
-1. [Project Setup](#project-setup)
-2. [Environment Configuration](#environment-configuration)
-3. [Database Setup (PostgreSQL)](#database-setup-postgresql)
-4. [Poetry Commands](#poetry-commands)
-5. [Alembic Migrations](#alembic-migrations)
-6. [Running the Application](#running-the-application)
-7. [Testing the API](#testing-the-api)
-8. [Common Issues & Troubleshooting](#common-issues--troubleshooting)
-9. [Project Structure](#project-structure)
-10. [Language](#language)
+✨ **Prerequisites**
+-------------------
 
----
+Before setting up the project, ensure the following tools are installed:
 
-## ⚙️ **Project Setup**
+### 1\. **Visual Studio Code (VS Code)**
 
-1. **Clone the Repository:**
+-   Download: <https://code.visualstudio.com/>
 
-```bash
+-   Recommended Extensions:
+
+    -   Python
+
+    -   Pylance
+
+    -   Docker (optional)
+
+### 2\. **Python (3.10 or higher)**
+
+-   Download: <https://www.python.org/downloads/>
+
+-   During installation on Windows, ensure "Add Python to PATH" is checked.
+
+### 3\. **Poetry**
+
+-   Install:
+
+```
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+
+```
+
+-   Verify:
+
+```
+poetry --version
+
+```
+
+### 4\. **PostgreSQL**
+
+-   Download and install: <https://www.postgresql.org/download/>
+
+-   Optionally install **pgAdmin**: <https://www.pgadmin.org/download/>
+
+    -   pgAdmin is a GUI for managing PostgreSQL databases.
+
+-   After installation, remember the username (default: `postgres`) and password you set.
+
+### 5\. **Redis** (for Celery background tasks)
+
+-   Recommended for background task queuing
+
+-   Quick local setup using Docker:
+
+```
+docker run -d -p 6379:6379 redis
+
+```
+
+* * * * *
+
+🚀 **Table of Contents**
+------------------------
+
+1.  [Project Setup](#project-setup)
+
+2.  [Environment Configuration](#environment-configuration)
+
+3.  [Database Setup (PostgreSQL)](#database-setup-postgresql)
+
+4.  [Poetry Environment & Dependency Management](#poetry-environment--dependency-management)
+
+5.  [Alembic Migrations](#alembic-migrations)
+
+6.  [Running the Application](#running-the-application)
+
+7.  [Testing the API](#testing-the-api)
+
+8.  [Common Issues & Troubleshooting](#common-issues--troubleshooting)
+
+9.  [Project Structure](#project-structure)
+
+10. [Localization](#localization)
+
+11. [Useful Commands](#useful-commands)
+
+* * * * *
+
+⚙️ **Project Setup**
+--------------------
+
+1.  **Clone the Repository:**
+
+```
 git clone https://github.com/your-username/cookiefyapi.git
 cd cookiefyapi
+
 ```
 
-2. **Install Python (3.10+ recommended):**
+1.  **Install Python (3.10+ recommended):**
 
-```bash
+```
 python --version
+
 ```
 
-## 🌍 Environment Configuration
+* * * * *
 
-1. Create a .env file:
- 
-```bash
+🌍 **Environment Configuration**
+--------------------------------
+
+1.  **Create a `.env` file**:
+
+```
 cp .env.example .env
+
 ```
 
-````.env```` Example:
+1.  **Edit `.env` with your values**:
 
-```bash
-# Project data 
+```
+# Project Info
+PROJECT_NAME=Cookiefy
 COMPANY_NAME=Cookiefy
 COMPANY_REG=SL
 COMPANY_ADDRESS=Calle Albasanz 71, 3-2, 28004 Madrid (Spain)
-COMPANY_NIF=<your_company_nif>
+COMPANY_NIF=XXXXXXXXX
 
-# Database Configuration
-DATABASE_URL=postgresql://<fastapi_user>:<strongpassword>@localhost:5432/cookiefyapi_db
-
-# Database Configuration. Use postgres for local container runs and localhost for uvicorn command
+# Database
+DATABASE_URL=postgresql://fastapi_user:strongpassword@localhost:5432/cookiefyapi_db
 DATABASE_HOSTNAME=localhost
 DATABASE_PORT=5432
-DATABASE_PASSWORD=<your_database_password>
-DATABASE_NAME=<your_database_name>
-DATABASE_USERNAME=<your_database_username>
+DATABASE_USERNAME=fastapi_user
+DATABASE_PASSWORD=strongpassword
+DATABASE_NAME=cookiefyapi_db
 
-# Security Settings
-SECRET_KEY=<your_secret_key>
-REFRESH_SECRET_KEY=<your_refresh_secret_key>
-ALGORITHM=<your_algorithm>
+# Security
+SECRET_KEY=your_secret_key
+REFRESH_SECRET_KEY=your_refresh_secret_key
+ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=15
 
-# Email Settings
-EMAIL=<your_email>
-EMAIL_PASSWORD=<your_email_password_token>
+# Email
+EMAIL=example@email.com
+EMAIL_PASSWORD=your_email_password
 SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
-DOMAIN=<your_server_https_domain>
+DOMAIN=localhost
 EMAIL_AUTH_CODE_EXPIRE_MINUTES=15
 EMAIL_RECOVERY_CODE_EXPIRE_MINUTES=5
 
-# Firebase Credentials File (Path to service account JSON)
+# Firebase Credentials
 GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
 
-#NUMINATIM GEOCODING API
-NOMINATIM_BASE_URL = https://nominatim.openstreetmap.org
-USER_AGENT = <your_agent_name>
+# Geolocation
+NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org
+USER_AGENT=CookiefyApp
+
+# Celery & Redis
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_BACKEND_RESULT=redis://localhost:6379/1
+BEAT_SCHEDULER_SECONDS=540
+
 ```
 
-2. Update the ````.env```` file with your database credentials and app settings.
+* * * * *
 
-## 🗄️ Database Setup (PostgreSQL)
+📈 **Database Setup (PostgreSQL)**
+----------------------------------
 
-1. Install PostgreSQL: <br>
-[Download here](https://www.postgresql.org/download/)
+1.  **Install PostgreSQL:** <https://www.postgresql.org/download/>
 
-2. Create Database and User: <br>
-Log into PostgreSQL: <br>
+2.  **Create user and database:**
 
-```bash
+```
 psql -U postgres
+
 ```
 
-Run the following commands:
-
-```bash
--- Create user and database
-CREATE USER <fastapi_user> WITH PASSWORD '<strongpassword>';
+```
+CREATE USER fastapi_user WITH PASSWORD 'strongpassword';
 CREATE DATABASE cookiefyapi_db OWNER fastapi_user;
-GRANT ALL PRIVILEGES ON DATABASE cookiefyapi_db TO <fastapi_user>;
-```
-Exit ````psql````:
-
-```bash
+GRANT ALL PRIVILEGES ON DATABASE cookiefyapi_db TO fastapi_user;
 \q
+
 ```
 
-## 📦 Poetry Commands
+* * * * *
 
-1. Install Poetry (if not already installed): <br>
+📦 **Poetry Environment & Dependency Management**
+-------------------------------------------------
 
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
+1.  **Install Poetry:**
+
 ```
-
-Or if using powershell terminal:
-
-```bash
 (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+
 ```
 
+1.  **Set Python version (if needed):**
 
-2. Set Up Virtual Environment: <br>
-
-```bash
+```
 poetry env use python3.10
+
 ```
 
-3. Install Project Dependencies: <br>
+1.  **Install dependencies:**
 
-```bash
+```
 poetry install
+
 ```
 
-4. Activate Virtual Environment: <br>
+1.  **Find the virtualenv path (for VS Code):**
 
-```bash
-poetry env activate
+```
+poetry env info --path
+
 ```
 
-5. Check Installed Packages:: <br>
+1.  **Set interpreter in VS Code** to the `python.exe` inside the path shown above.
 
-```bash
-poetry show
+2.  **Activate environment manually (optional):**
+
+```
+& "<venv_path>\Scripts\Activate.ps1"
+
 ```
 
-## ⚒️ Alembic Migrations
+* * * * *
 
-1. Initialize Alembic (First Time Only): <br>
+⚒️ Alembic Migrations
+---------------------
 
-```bash
-poetry run alembic init alembic
+1.  **Configure `alembic.ini`**:
+
+```
+sqlalchemy.url = postgresql://fastapi_user:strongpassword@localhost:5432/cookiefyapi_db
+
 ```
 
-2. Configure Database in ````alembic.ini````: <br>
+1.  **Generate migration:**
 
-```bash
-sqlalchemy.url = postgresql://<fastapi_user>:<strongpassword>@localhost:5432/cookiefyapi_db
 ```
-
-3. Generate Migrations: <br>
-
-```bash
 poetry run alembic revision --autogenerate -m "Initial migration"
+
 ```
 
-4. Apply Migrations: <br>
+1.  **Apply migration:**
 
-```bash
+```
 poetry run alembic upgrade head
+
 ```
 
-5. Check Current Migration: <br>
+1.  **Check migration status:**
 
-```bash
+```
 poetry run alembic current
+
 ```
 
-6. Rollback Migration (If Needed): <br>
+1.  **Rollback (if needed):**
 
-```bash
+```
 poetry run alembic downgrade -1
+
 ```
 
-## 🚀 Running the Application
+* * * * *
 
-1. Start FastAPI with Uvicorn: <br>
+🚀 Running the Application
+--------------------------
 
-```bash
+```
 poetry run uvicorn app.main:app --reload
+
 ```
 
-2. API Documentation: <br>
+-   Swagger UI: <http://127.0.0.1:8000/docs>
 
-- Swagger UI: http://127.0.0.1:8000/docs
-- ReDoc: http://127.0.0.1:8000/redoc
+-   ReDoc: <http://127.0.0.1:8000/redoc>
 
-3. Stop the Server: <br>
+* * * * *
 
-Press ````CTRL + C```` to stop the server.
+🔬 Testing the API
+------------------
 
+1.  **Install test dependencies:**
 
-## 🔬 Testing the API
-
-1. Install Testing Dependencies: <br>
-
-```bash
+```
 poetry add --dev pytest httpx
+
 ```
 
-2. Run Tests: <br>
+1.  **Run tests:**
 
-```bash
+```
 poetry run pytest
+
 ```
 
-## ❓ Common Issues & Troubleshooting
+* * * * *
 
-1. Database Connection Error (psycopg2.OperationalError): <br>
+❓ Common Issues & Troubleshooting
+---------------------------------
 
-- Ensure PostgreSQL is running:
+| Issue | Solution |
+| --- | --- |
+| `ModuleNotFoundError` | Run `poetry install` and select the correct interpreter in VS Code |
+| `psycopg2.OperationalError` | Make sure PostgreSQL is running and `.env` is correct |
+| `.env` not loading | Ensure `model_config = SettingsConfigDict(env_file=".env")` is in your `Settings` class |
+| Alembic connection error | Check that your DB URL is valid and `.env` contains all required fields |
 
-```bash
-sudo systemctl start postgresql  # Linux/macOS
-net start postgresql             # Windows
+* * * * *
+
+📁 Project Structure
+--------------------
+
 ```
-
--Test connection:
-
-```bash
-psql -U <fastapi_user> -d cookiefyapi_db
-```
-
-2. Package Not Found (````ModuleNotFoundError````):
-- Ensure you're in the Poetry virtual environment:
-
-```bash
-poetry shell
-```
-
-## 📁 **Project Structure**
-
-```bash
 cookiefyapi/
 ├── app/
-│   ├── api/             # API routes (endpoints)
-│   ├── core/            # Core settings and security
-│   ├── db/              # Database connection
+│   ├── api/             # API routes
+│   ├── core/            # Settings, security
+│   ├── db/              # DB session/init
 │   ├── models/          # SQLAlchemy models
 │   ├── schemas/         # Pydantic schemas
 │   ├── services/        # Business logic
-│   ├── tests/           # Test files
-│   ├── main.py          # Application entry point
-│   └── dependencies.py  # Common dependencies
-├── alembic/             # Database migrations
-├── .env                 # Environment variables
-├── pyproject.toml       # Poetry configuration
-├── README.md            # Project documentation
-└── Dockerfile           # Container setup (optional)
+│   ├── main.py          # FastAPI entry point
+│   └── dependencies.py
+├── alembic/             # Alembic migrations
+├── .env                 # Environment config
+├── pyproject.toml       # Poetry config
+├── README.md            # This file
+└── Dockerfile           # Optional container support
+
 ```
 
-## **Language**
+* * * * *
 
-To compile ````babel.cfg```` run:
+📄 Localization
+---------------
 
-```bash
+```
+# Extract messages
 pybabel extract -F app/babel.cfg -o messages.pot .
-```
 
-To initialize new translations a ````.po```` file run:
-
-```bash
+# Initialize translations
 pybabel init -i messages.pot -d app/locales -l en
 pybabel init -i messages.pot -d app/locales -l es
-```
 
-To update existing translations run:
-
-```bash
+# Update existing translations
 pybabel update -i messages.pot -d app/locales
-```
 
-Compile them from a ````.po```` into binary ````.mo```` file by running:
-
-```bash
+# Compile translations
 pybabel compile -d app/locales
+
 ```
 
-## 📜 **Useful Commands**
+* * * * *
 
-| **Task**                | **Command**                                          |
-|--------------------------|-------------------------------------------------------|
-| Install dependencies     | `poetry install`                                      |
-| Add a package            | `poetry add <package>`                                |
-| Remove a package         | `poetry remove <package>`                             |
-| Run app                  | `poetry run uvicorn app.main:app --reload`            |
-| Create Alembic migration | `poetry run alembic revision --autogenerate -m "Message"` |
-| Apply migrations         | `poetry run alembic upgrade head`                     |
-| Run tests                | `poetry run pytest`                                   |
+📜 Useful Commands
+------------------
+
+| Task | Command |
+| --- | --- |
+| Install dependencies | `poetry install` |
+| Add package | `poetry add <package>` |
+| Remove package | `poetry remove <package>` |
+| Run app | `poetry run uvicorn app.main:app --reload` |
+| Create migration | `poetry run alembic revision --autogenerate -m "Message"` |
+| Apply migrations | `poetry run alembic upgrade head` |
+| Run tests | `poetry run pytest` |
+| Enter Python shell | `poetry run python` |
+| Show installed packages | `poetry show` |
+| View venv path | `poetry env info --path` |
+
+* * * * *
+
+Happy hacking! 🤖
