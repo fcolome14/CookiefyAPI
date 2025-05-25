@@ -6,8 +6,9 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
 from httpx import AsyncClient
+from app.core.config import settings
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://test_user:test_pass@localhost:5433/test_db")
+DATABASE_URL = f"postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}"
 
 engine = create_engine(DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

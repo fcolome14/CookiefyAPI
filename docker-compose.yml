@@ -1,49 +1,23 @@
-services:
-  postgres:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_DB: cookiefy_test
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_pass
-    ports:
-      - "5432:5432"
+version: "3.8"
 
-  test:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: pytest -v
-    environment:
-      DATABASE_HOSTNAME: postgres
-      DATABASE_PORT: 5432
-      DATABASE_USERNAME: test_user
-      DATABASE_PASSWORD: test_pass
-      DATABASE_NAME: cookiefy_test
-      # Required for your Pydantic `Settings`
-      PROJECT_NAME: "Cookiefy"
-      COMPANY_NAME: "Cookiefy Inc"
-      COMPANY_REG: "C12345678"
-      COMPANY_ADDRESS: "123 Cookie St"
-      COMPANY_NIF: "A12345678"
-      SECRET_KEY: "testsecret"
-      REFRESH_SECRET_KEY: "testrefresh"
-      ALGORITHM: "HS256"
-      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
-      EMAIL: "test@example.com"
-      EMAIL_PASSWORD: "examplepass"
-      SMTP_SERVER: "smtp.example.com"
-      SMTP_PORT: "587"
-      DOMAIN: "localhost"
-      EMAIL_AUTH_CODE_EXPIRE_MINUTES: "10"
-      EMAIL_RECOVERY_CODE_EXPIRE_MINUTES: "10"
-      GOOGLE_APPLICATION_CREDENTIALS: "/dev/null"
-      NOMINATIM_BASE_URL: "https://nominatim.example.com"
-      USER_AGENT: "cookiefy-test"
-      CELERY_BROKER_URL: "redis://localhost:6379/0"
-      CELERY_BACKEND_RESULT: "redis://localhost:6379/1"
-      BEAT_SCHEDULER_SECONDS: "60"
+services:
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  celery_worker:
+    build: .
+    command: celery -A celery_app worker --loglevel=info
+    env_file:
+      - .env
     depends_on:
-      - postgres
-    volumes:
-      - .:/code
+      - redis
+
+  celery_beat:
+    build: .
+    command: celery -A celery_app beat --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      - redis

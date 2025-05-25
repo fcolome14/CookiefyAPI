@@ -4,13 +4,13 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: test_db
-      POSTGRES_USER: test_user
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: test_pass
+      POSTGRES_DB: cookiefy_test
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "test_user"]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,7 +20,34 @@ services:
       context: ../../../
       dockerfile: app/tests/compose/Dockerfile
     environment:
-      DATABASE_URL: postgresql://test_user:test_pass@db:5432/test_db
+      PROJECT_NAME: Cookiefy
+      COMPANY_NAME: Cookiefy
+      COMPANY_REG: SL
+      COMPANY_ADDRESS: Calle Albasanz 71, 3-2, 28004 Madrid (Spain)
+      COMPANY_NIF: 123456TEST
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: test_pass
+      DATABASE_HOSTNAME: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: cookiefy_test
+      DATABASE_URL: postgresql://postgres:test_pass@db:5432/cookiefy_test
+      SECRET_KEY: testsecret
+      REFRESH_SECRET_KEY: testrefresh
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      EMAIL: test@example.com
+      EMAIL_PASSWORD: examplepass
+      SMTP_SERVER: smtp.example.com
+      SMTP_PORT: 587
+      DOMAIN: localhost
+      EMAIL_AUTH_CODE_EXPIRE_MINUTES: 10
+      EMAIL_RECOVERY_CODE_EXPIRE_MINUTES: 10
+      GOOGLE_APPLICATION_CREDENTIALS: /dev/null
+      NOMINATIM_BASE_URL: https://nominatim.example.com
+      USER_AGENT: cookiefy-test
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_BACKEND_RESULT: redis://localhost:6379/1
+      BEAT_SCHEDULER_SECONDS: 60
     depends_on:
       db:
         condition: service_healthy
