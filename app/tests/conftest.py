@@ -1,18 +1,23 @@
-import os
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
-from httpx import AsyncClient
 from app.core.config import settings
 
-DATABASE_URL = f"postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}"
-
+# Create a test database engine
+DATABASE_URL = (
+    f"postgresql://{settings.database_username}:"
+    f"{settings.database_password}@{settings.database_hostname}:"
+    f"{settings.database_port}/{settings.database_name}"
+)
 engine = create_engine(DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Set up the database schema once for the whole session
 @pytest.fixture(scope="session")
 def db():
     Base.metadata.drop_all(bind=engine)
@@ -23,23 +28,30 @@ def db():
     finally:
         db.close()
 
+# Override get_db dependency
 @pytest.fixture(scope="function")
 def override_get_db(db):
     def _get_db():
-        yield db
+        try:
+            yield db
+        finally:
+            db.close()
     app.dependency_overrides[get_db] = _get_db
 
+# Override current user
 @pytest.fixture(scope="function")
 def override_user():
     from app.core.security import get_current_user
     app.dependency_overrides[get_current_user] = lambda: 1
 
+# Automatically clear dependency overrides after each test
 @pytest.fixture(autouse=True)
 def clear_overrides():
     yield
     app.dependency_overrides.clear()
 
+# Provide a sync test client
 @pytest.fixture(scope="function")
-async def async_client(override_get_db, override_user):
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        yield client
+def client(override_get_db, override_user):
+    with TestClient(app) as c:
+        yield c

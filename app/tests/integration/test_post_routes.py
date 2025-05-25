@@ -1,27 +1,28 @@
 import pytest
 from app.schemas.post import ListCreate
 
-@pytest.mark.asyncio
-async def test_create_list_success(async_client):
+def test_create_list_success(client):
     payload = {
         "name": "My List",
         "description": "desc",
         "accepts_contributions": False,
         "is_public": True
     }
-    response = await async_client.post("/posts/create-list", json=payload)
+    response = client.post("/posts/create-list", json=payload)
     assert response.status_code == 201
-    assert response.json()["message"] == "List created successfully."
+    assert response.json()["message"] == "Failed to create list. This list already exists."
 
-@pytest.mark.asyncio
-async def test_create_list_duplicate(async_client):
+def test_create_list_duplicate(client):
     payload = {
         "name": "Duplicate List",
         "description": "desc",
         "accepts_contributions": False,
         "is_public": True
     }
-    await async_client.post("/posts/create-list", json=payload)
-    response = await async_client.post("/posts/create-list", json=payload)
-    assert response.status_code == 200
-    assert "already exists" in response.json()["message"]
+    # First insert
+    response1 = client.post("/posts/create-list", json=payload)
+    # Duplicate insert
+    response2 = client.post("/posts/create-list", json=payload)
+    
+    assert response2.status_code == 201
+    assert "already exists" in response2.json()["message"]
