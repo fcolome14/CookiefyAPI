@@ -5,6 +5,7 @@ description = "Cookiefy API project to handle the application services"
 authors = [
     {name = "Ferran Colome",email = "ferrancolomsanz@gmail.com"}
 ]
+package-mode = false
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
