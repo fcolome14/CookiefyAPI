@@ -1,15 +1,23 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-RUN apt-get update && apt-get install -y curl build-essential
+WORKDIR /code
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y gcc libpq-dev build-essential curl
+
+# Install poetry
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
     ln -s /root/.local/bin/poetry /usr/local/bin/poetry
 
-WORKDIR /app
-
+# Copy only the lock files first to leverage caching
 COPY pyproject.toml poetry.lock ./
-RUN poetry config virtualenvs.create false && poetry install --no-root --no-interaction --no-ansi
 
+# Install only dependencies, not the current project
+RUN poetry config virtualenvs.create false && \
+    poetry install --with test --no-root --no-interaction
+
+# Copy project source code
 COPY . .
 
-CMD ["celery", "-A", "celery", "worker", "--loglevel=info"]
+# Run tests
+CMD ["pytest", "-v"]

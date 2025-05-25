@@ -10,7 +10,7 @@ class List(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     name = Column(String, nullable=False, index=True)
-    owner = Column(String, ForeignKey("users.id"), nullable=True)
+    owner = Column(Integer, ForeignKey("users.id"), nullable=True)
     description = Column(String, nullable=True)
     likes = Column(Integer, nullable=True, default=0)
     shares = Column(Integer, nullable=True, default=0)

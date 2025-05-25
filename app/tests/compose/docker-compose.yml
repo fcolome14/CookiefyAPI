@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "test_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  test:
+    build:
+      context: ../../../
+      dockerfile: app/tests/compose/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://test_user:test_pass@db:5432/test_db
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["pytest", "-v"]
