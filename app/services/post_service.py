@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.lists import List as ListModel
+from app.models.image import Image
 from app.schemas.post import (
     PostRead, 
     ListCreate, 
@@ -12,8 +13,18 @@ import logging
 from app.repositories.post_repo import PostRepository
 from abc import ABC, abstractmethod
 from typing import Union, List, Optional
+import os
+from uuid import uuid4
+from PIL import Image as PILImage
+from io import BytesIO
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "images")
+MAX_IMAGE_SIZE_MB = 5
+ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
 class IPostService(ABC):
     """Interface service for managing posts."""
@@ -179,6 +190,50 @@ class PostService(IPostService):
         if image_id:
             content = self.post_repo.get_image(image_id)
             status = "success" if content else "error"
+
+        return {"status": status, "content": content}
+    
+    async def upload_image(self, file) -> dict:
+        status, content = "error", "Invalid upload"
+
+        try:
+            # Check file extension
+            ext = os.path.splitext(file.filename)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                return {"status": "error", "content": "Unsupported file format."}
+
+            # Check file size (in-memory)
+            file_content = await file.read()
+            size_mb = len(file_content) / (1024 * 1024)
+            if size_mb > MAX_IMAGE_SIZE_MB:
+                return {"status": "error", "content": "File too large. Max 5MB."}
+
+            # Load and compress using Pillow
+            image_stream = BytesIO(file_content)
+            image = PILImage.open(image_stream)
+
+            # Resize or recompress if needed (optional)
+            image = image.convert("RGB")  # Ensure format
+            output = BytesIO()
+            image.save(output, format="JPEG", optimize=True, quality=85)
+            output.seek(0)
+
+            # Save compressed image to disk
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
+            filename = f"{uuid4().hex}.jpg"
+            file_storage = os.path.join(UPLOAD_DIR, filename) # Internal path
+            file_path = f"media/{filename}" # Exposed path
+
+            with open(file_storage, "wb") as f:
+                f.write(output.read())
+
+            # Store image metadata in DB
+            image_record = Image(name=filename, path=file_path)
+            content = self.post_repo.add_image_path(image_record)
+            status = "success" if content else "error"
+
+        except Exception as e:
+            return {"status": "error", "content": f"Upload failed: {str(e)}"}
 
         return {"status": status, "content": content}
     

@@ -21,6 +21,8 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     # Rename the column `image` to `image_id`
     op.alter_column('sites', 'image', new_column_name='image_id')
+    op.alter_column('images','data',existing_type=sa.LargeBinary(),nullable=True)
+    op.add_column('images', sa.Column('path', sa.String(), nullable=False, server_default=""))
 
     # Drop old index and create a new one for the renamed column
     op.drop_index('ix_sites_image', table_name='sites')
@@ -31,5 +33,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     # Revert the column name and index
     op.alter_column('sites', 'image_id', new_column_name='image')
+    op.alter_column('images','data',existing_type=sa.LargeBinary(),nullable=False)
+    op.drop_column('images', 'path')
     op.drop_index('ix_sites_image_id', table_name='sites')
     op.create_index('ix_sites_image', 'sites', ['image'], unique=False)

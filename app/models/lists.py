@@ -24,3 +24,4 @@ class List(Base):
     )
 
     sites = relationship("Site", secondary="list_site_association", back_populates="lists")
+    image_file = relationship("Image", backref="lists", foreign_keys=[image])

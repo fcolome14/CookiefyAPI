@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, field_serializer
 from typing import List as TypingList, Optional
 from app.core.config import settings
+from app.models.image import Image
 
 class ListCreate(BaseModel):
     name: str
@@ -33,7 +34,20 @@ class SiteRead(BaseModel):
     city: Optional[str]
     contact: Optional[str]
     hashtags: TypingList[HashtagRead]  # nested
+    image: Optional[Image] # type: ignore
 
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+
+    @field_serializer("image")
+    def serialize_image(self, image_file: Optional[Image]) -> Optional[str]: # type: ignore
+        if image_file:
+            print("DEBUG → path:", image_file.path)
+            return f"{settings.image_domain}/{image_file.path}"
+        return None
+
+class ImageRead(BaseModel):
+    id: int
+    path: str
     model_config = ConfigDict(from_attributes=True)
 
 class ListRead(BaseModel):
@@ -43,16 +57,19 @@ class ListRead(BaseModel):
     likes: int
     shares: int
     saves: int
-    image: int
+    image_file: Optional[ImageRead]
     accepts_contributions: bool
     is_public: bool
-    sites: TypingList[SiteRead]  # nested
+    sites: TypingList[SiteRead]
 
     model_config = ConfigDict(from_attributes=True)
 
-    @field_serializer("image")
-    def serialize_image(self, image_id: int) -> str:
-        return f"{settings.image_domain}/posts/get-image/{image_id}"
+    @field_serializer("image_file")
+    def serialize_image(self, image_file: Optional[ImageRead]) -> Optional[str]:
+        if image_file:
+            print("DEBUG → path:", image_file.path)
+            return f"{settings.image_domain}/{image_file.path}"
+        return None
 
 class ListDelete(BaseModel):
     id: list[int]

@@ -125,8 +125,9 @@ class PostRepository(IPostRepository):
         return (
             self.db.query(ListModel)
             .options(
-                joinedload(ListModel.sites).joinedload(Site.hashtags),
-                joinedload(ListModel.sites).joinedload(Site.image)
+                joinedload(ListModel.image_file),
+                joinedload(ListModel.sites).joinedload(Site.image),
+                joinedload(ListModel.sites).joinedload(Site.hashtags)
             )
             .filter(
                 ListModel.is_banned == False,
@@ -137,6 +138,12 @@ class PostRepository(IPostRepository):
     
     def get_image(self, image_id: int) -> str:
         return self.db.query(Image).get(image_id)
+    
+    def add_image_path(self, image: Image) -> str:
+        self.db.add(image)
+        self.db.commit()
+        self.db.refresh(image)
+        return image
         
     def check_sites_id(self, sites_id: list[int]) -> bool | None:
         """Fetch all sites from their ids."""
