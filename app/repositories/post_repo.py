@@ -4,6 +4,7 @@ from app.models.lists import List as ListModel
 from app.schemas.post import ListDelete, ListCreate
 from app.models.site import Site
 from app.models.user import User
+from app.models.image import Image
 from app.models.associations import list_site_association
 from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
@@ -124,7 +125,8 @@ class PostRepository(IPostRepository):
         return (
             self.db.query(ListModel)
             .options(
-                joinedload(ListModel.sites).joinedload(Site.hashtags)
+                joinedload(ListModel.sites).joinedload(Site.hashtags),
+                joinedload(ListModel.sites).joinedload(Site.image)
             )
             .filter(
                 ListModel.is_banned == False,
@@ -133,6 +135,9 @@ class PostRepository(IPostRepository):
             .all()
         )
     
+    def get_image(self, image_id: int) -> str:
+        return self.db.query(Image).get(image_id)
+        
     def check_sites_id(self, sites_id: list[int]) -> bool | None:
         """Fetch all sites from their ids."""
         existing_ids = (

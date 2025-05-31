@@ -4,10 +4,13 @@ from app.schemas.responses import SuccessResponse, ErrorResponse
 from app.schemas.post import ListCreate, ListUpdate, ListDelete
 from app.services.post_service import PostService
 from app.models.lists import List
+from app.models.image import Image
 from app.core.security import get_current_user
 from app.services.auth_service import NumericAuthCode, AuthCodeManager
 from app.utils.date_time import TimeUtils
 from app.db.session import get_db
+from io import BytesIO
+from fastapi.responses import StreamingResponse
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -142,3 +145,26 @@ async def get_list(
             "client": request.headers.get("client-type", "unknown"),
         },
     )
+
+@router.get("/get-image/{image_id}", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
+async def get_list(
+    request: Request,
+    image_id: int,
+    _: int = Depends(get_current_user),
+    post_service: PostService = Depends(get_post_service)
+):
+    """Endpoint to get an image content from a post."""
+
+    result = await post_service.get_image(image_id)
+
+    if result["status"] == "error":
+        return ErrorResponse(
+            message=result["content"],
+            meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+        )
+    
+    image: Image = result["content"]
+    return StreamingResponse(BytesIO(image.data), media_type="image/png")

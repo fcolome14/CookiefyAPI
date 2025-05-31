@@ -1,5 +1,6 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 from typing import List as TypingList, Optional
+from app.core.config import settings
 
 class ListCreate(BaseModel):
     name: str
@@ -48,6 +49,10 @@ class ListRead(BaseModel):
     sites: TypingList[SiteRead]  # nested
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("image")
+    def serialize_image(self, image_id: int) -> str:
+        return f"{settings.image_domain}/posts/get-image/{image_id}"
 
 class ListDelete(BaseModel):
     id: list[int]

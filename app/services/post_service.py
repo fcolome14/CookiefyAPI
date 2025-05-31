@@ -174,5 +174,13 @@ class PostService(IPostService):
         serialized = [ListRead.model_validate(lst) for lst in fetched_lists]
         return {"status": "success", "lists": serialized}
     
+    async def get_image(self, image_id: int) -> PostRead | None:
+        status, content = "error", "Not found"
+        if image_id:
+            content = self.post_repo.get_image(image_id)
+            status = "success" if content else "error"
+
+        return {"status": status, "content": content}
+    
     def get_site(self) -> PostRead | None:
         pass

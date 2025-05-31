@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     company_reg: str
     company_address: str
     company_nif: str
+    domain: str
+    image_domain: str
     
     database_hostname: str
     database_port: str
@@ -32,7 +34,6 @@ class Settings(BaseSettings):
     email_password: str
     smtp_server: str
     smtp_port: int
-    domain: str
     email_auth_code_expire_minutes: int
     email_recovery_code_expire_minutes: int
     

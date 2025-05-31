@@ -5,6 +5,7 @@ from app.db.base import Base
 from sqlalchemy.orm import relationship
 from app.models.associations import site_hashtag_association, list_site_association
 from app.models.lists import List
+from app.models.image import Image
 
 class Site(Base):
     __tablename__ = "sites"
@@ -15,7 +16,8 @@ class Site(Base):
     city = Column(String, nullable=True)
     contact = Column(String, nullable=True)
 
-    image = Column(Integer, ForeignKey("images.id"), nullable=True)
+    image_id = Column(Integer, ForeignKey("images.id"), nullable=True)
+    image = relationship("Image", backref="sites")
     category = Column(Integer, ForeignKey("categories.id"), nullable=True)
     hashtags = relationship("Hashtag", secondary=site_hashtag_association, back_populates="sites")
 
