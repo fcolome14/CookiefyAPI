@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "images")
-MAX_IMAGE_SIZE_MB = 5
+MAX_IMAGE_SIZE_MB = 15
 ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
 class IPostService(ABC):
@@ -212,10 +212,11 @@ class PostService(IPostService):
             image_stream = BytesIO(file_content)
             image = PILImage.open(image_stream)
 
-            # Resize or recompress if needed (optional)
+            # Resize and recompress
             image = image.convert("RGB")  # Ensure format
+            image = image.resize((150, 150), PILImage.LANCZOS)
             output = BytesIO()
-            image.save(output, format="JPEG", optimize=True, quality=85)
+            image.save(output, format="JPEG", optimize=True, quality=70)
             output.seek(0)
 
             # Save compressed image to disk

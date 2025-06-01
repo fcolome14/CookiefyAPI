@@ -9,7 +9,8 @@ from app.services.auth_service import NumericAuthCode, AuthCodeManager
 from app.utils.date_time import TimeUtils
 from app.db.session import get_db
 from io import BytesIO
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse 
+
 
 router = APIRouter(prefix="/images", tags=["Images"])
 
@@ -20,8 +21,8 @@ def get_post_service(db: Session = Depends(get_db)) -> PostService:
     time_utils = TimeUtils()
     return PostService(db, auth_service, time_utils)
 
-@router.get("/get-image/{image_id}", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
-async def get_list(
+@router.get("/media-db/{image_id}", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
+async def get_image_content_database(
     request: Request,
     image_id: int,
     _: int = Depends(get_current_user),
@@ -42,6 +43,7 @@ async def get_list(
     
     image: Image = result["content"]
     return StreamingResponse(BytesIO(image.data), media_type="image/png")
+
 
 @router.post("/upload-image/", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
 async def upload_image(
