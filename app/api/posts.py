@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.schemas.responses import SuccessResponse, ErrorResponse
+from app.schemas.post import UserLocation
 from app.schemas.post import ListCreate, ListUpdate, ListDelete
 from app.services.post_service import PostService
 from app.models.lists import List
@@ -146,3 +147,30 @@ async def get_list(
         },
     )
 
+@router.get("/get-nearby-lists", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
+async def get_nearby_lists(
+    request: Request,
+    user_location: UserLocation,
+    user_id: int = Depends(get_current_user),
+    post_service: PostService = Depends(get_post_service),
+):
+    """Endpoint to get lists nearby a user's location."""
+    result = await post_service.get_nearby_lists(user_location.location)
+
+    if result["status"] == "error":
+        return ErrorResponse(
+            message=result["message"],
+            meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+        )
+        
+    return SuccessResponse(
+        message=None,
+        data={"lists": result["lists"]},
+        meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+    )

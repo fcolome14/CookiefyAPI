@@ -50,6 +50,9 @@ class ImageRead(BaseModel):
     path: str
     model_config = ConfigDict(from_attributes=True)
 
+class UserLocation(BaseModel):
+    location: str
+
 class ListRead(BaseModel):
     id: int
     name: str

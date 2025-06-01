@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy.orm import relationship
@@ -10,6 +10,8 @@ class Hashtag(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    score = Column(Float, nullable=True, server_default=text("0.0"))
+    usage_count = Column(Integer, nullable=True, server_default=text("0"))
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=True, server_default=text("now()")
     )

@@ -192,6 +192,9 @@ class PostService(IPostService):
         serialized = [ListRead.model_validate(lst) for lst in fetched_lists]
         return {"status": "success", "lists": serialized}
     
+    async def get_nearby_lists(self, location: str) -> PostRead | None:
+        fetched_lists = self.post_repo.get_nearby_lists()
+    
     async def get_image(self, image_id: int) -> PostRead | None:
         status, content = "error", "Not found"
         if image_id:

@@ -63,9 +63,9 @@ class UserService(IUserService):
 
         code = int(auth_code_result["message"])
         code_expiration = self.time_utils.exp_time(settings.email_auth_code_expire_minutes)
-        tmp = EmailTemplates.NEW_USER.value
+        template = EmailTemplates.NEW_USER.value
         
-        sent_email = await self._send_auth_email(code, user_input.email, tmp, "Your Verification Code")
+        sent_email = await self._send_auth_email(code, user_input.email, template, "Your Verification Code")
         if sent_email["status"] == "error":
             msg = "Failed to send email"
             logger.error(msg)
@@ -90,9 +90,9 @@ class UserService(IUserService):
         
         user.code = code
         user.code_exp = code_expiration
-        tmp = EmailTemplates.PASSWORD_RECOVERY.value
+        template = EmailTemplates.PASSWORD_RECOVERY.value
         
-        sent_email = await self._send_auth_email(code, user_email, tmp, "Your Recovery Code")
+        sent_email = await self._send_auth_email(code, user_email, template, "Your Recovery Code")
         if sent_email["status"] == "error":
             msg = "Failed to send email"
             logger.error(msg)
@@ -140,7 +140,7 @@ class UserService(IUserService):
 
     async def _get_email_template(self, template_name: str) -> str | None:
         """Read the email template file asynchronously."""
-        template_path = Path("app/tmp") / template_name
+        template_path = Path("app/template") / template_name
 
         if not template_path.exists():
             logger.error("Email template not found at %s", template_path)

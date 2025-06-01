@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, and_, select, insert, delete
+from sqlalchemy import or_, and_, select, insert, delete, func
 from app.models.lists import List as ListModel
 from app.schemas.post import ListDelete, ListCreate
 from app.models.site import Site
@@ -139,6 +139,18 @@ class PostRepository(IPostRepository):
             )
             .all()
         )
+
+    def get_nearby_sites(self, city: list[str]) -> list[Site]:
+        if isinstance(city, str):
+            city = [city.lower()]
+
+        return (
+            self.db.query(Site)
+            .filter(
+                func.lower(Site.city).in_(city)
+                )
+                .all()
+            )    
     
     def get_image(self, image_id: int) -> str:
         return self.db.query(Image).get(image_id)

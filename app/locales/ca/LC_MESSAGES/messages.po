@@ -26,21 +26,21 @@ msgstr "El vostre compte s'ha verificat amb èxit."
 msgid "Verification failed."
 msgstr "La verificació ha fallat."
 
-#: app/tmp/privacy_policy.html:6
+#: app/template/privacy_policy.html:6
 #, python-format
 msgid "Privacy Policy - %(company)s"
 msgstr "Política de Privacitat - %(company)s"
 
-#: app/tmp/privacy_policy.html:34
+#: app/template/privacy_policy.html:34
 #, python-format
 msgid "Privacy Policy of %(company_formal)s"
 msgstr "Política de Privacitat de %(company_formal)s"
 
-#: app/tmp/privacy_policy.html:39
+#: app/template/privacy_policy.html:39
 msgid "1. Introduction"
 msgstr "1. Introducció"
 
-#: app/tmp/privacy_policy.html:40
+#: app/template/privacy_policy.html:40
 #, python-format
 msgid ""
 "This Privacy Policy (the “Privacy Policy”) describes how personal data "
@@ -49,11 +49,11 @@ msgid ""
 "protected, and treated in general, as described in the Terms and Conditions."
 msgstr "Aquesta política de privacitat (la "Política de privacitat") descriu com les dades personals proporcionades pels usuaris ("l'usuari" o els "usuaris") que utilitzen l'aplicació "%(company)s" l'aplicació" (L'"Aplicació") es recullen, s'utilitzen, emmagatzemen, comparteixen, protegeixen i es tracta en general, tal com es descriu als Termes i Condicions </a>."
 
-#: app/tmp/privacy_policy.html:45
+#: app/template/privacy_policy.html:45
 msgid "2. Data Collection and User Responsibility"
 msgstr "2. Responsabilitat de l'Usuari i Recolecció de Dades"
 
-#: app/tmp/privacy_policy.html:46
+#: app/template/privacy_policy.html:46
 msgid ""
 "The personal data required is strictly necessary for the use of the "
 "Application. The User guarantees the authenticity and truthfulness of the"
@@ -61,11 +61,11 @@ msgid ""
 "their real situation at all times."
 msgstr "Les dades personals necessàries són estrictament necessàries per a l’ús de l’aplicació. "
 
-#: app/tmp/privacy_policy.html:50
+#: app/template/privacy_policy.html:50
 msgid "3. Data Controller"
 msgstr "3. Gestor de les Dades"
 
-#: app/tmp/privacy_policy.html:51
+#: app/template/privacy_policy.html:51
 #, python-format
 msgid ""
 "The data controller is the Spanish company %(company)s, S.L. "
@@ -73,7 +73,7 @@ msgid ""
 "%(company_address)s."
 msgstr "El gestor de les dades és la companyia espanyola %(company)s, S.L. "
 
-#: app/tmp/privacy_policy.html:53
+#: app/template/privacy_policy.html:53
 #, python-format
 msgid ""
 "If you have any questions or suggestions regarding the processing of your"
@@ -81,70 +81,70 @@ msgid ""
 "href=\"mailto:%(email)s\">%(email)s</a>."
 msgstr "Si teniu dubtes o suggeriments sobre el processament de les vostres dades personals, podeu contactar amb nosaltres per correu electrònic a <a href = \ "mailto:%(email)s \">%(email)s </a>."
 
-#: app/tmp/privacy_policy.html:58
+#: app/template/privacy_policy.html:58
 msgid "4. Data Processed"
 msgstr "4. Processament de Dades"
 
-#: app/tmp/privacy_policy.html:59
+#: app/template/privacy_policy.html:59
 msgid ""
 "We will process the data you provide through any form or data entry "
 "channel in the Application, or any other means of contact such as email, "
 "postal mail, phone calls, or instant messaging."
 msgstr "Processarem les dades que proporcioneu a través de qualsevol formulari o canal d’entrada de dades a l’aplicació o qualsevol altre mitjà de contacte com ara correu electrònic, correu postal, trucades telefòniques o missatgeria instantània."
 
-#: app/tmp/privacy_policy.html:63
+#: app/template/privacy_policy.html:63
 msgid "5. Legal Bases for Processing"
 msgstr "5. Base Legal pel Processament"
 
-#: app/tmp/privacy_policy.html:65
+#: app/template/privacy_policy.html:65
 msgid "To fulfill a legal obligation;"
 msgstr "Complir una obligació legal;"
 
-#: app/tmp/privacy_policy.html:66
+#: app/template/privacy_policy.html:66
 msgid ""
 "For the execution and performance of a contract or for the application of"
 " pre-contractual measures in order to provide our services;"
 msgstr "Per a l'execució i el rendiment d'un contracte o per a l'aplicació de mesures pre-contractuals per tal de proporcionar els nostres serveis;"
 
-#: app/tmp/privacy_policy.html:67
+#: app/template/privacy_policy.html:67
 msgid ""
 "For the satisfaction of legitimate interests we pursue as the data "
 "controller;"
 msgstr "Per a la satisfacció dels interessos legítims, perseguim com a controlador de dades;"
 
-#: app/tmp/privacy_policy.html:68
+#: app/template/privacy_policy.html:68
 msgid ""
 "When the User has given explicit consent. The User can revoke consent at "
 "any time."
 msgstr "Quan l'usuari ha donat consentiment explícit. "
 
-#: app/tmp/privacy_policy.html:73
+#: app/template/privacy_policy.html:73
 msgid "6. Purposes of Data Processing"
 msgstr "6. Objectius del Processament de Dades"
 
-#: app/tmp/privacy_policy.html:75
+#: app/template/privacy_policy.html:75
 msgid ""
 "Registration of the User: To manage your registration or user account, "
 "verify the provided information, and facilitate resources and content."
 msgstr "Registre de l’usuari: per gestionar el vostre registre o compte d’usuari, verifiqueu la informació proporcionada i faciliteu els recursos i el contingut."
 
-#: app/tmp/privacy_policy.html:76
+#: app/template/privacy_policy.html:76
 msgid ""
 "Use of the Application: To manage user activities, communications, "
 "notifications, messages, and recommendations within the app."
 msgstr "Ús de l’aplicació: per gestionar les activitats dels usuaris, les comunicacions, les notificacions, els missatges i les recomanacions de l’aplicació."
 
-#: app/tmp/privacy_policy.html:77
+#: app/template/privacy_policy.html:77
 msgid ""
 "Marketing Communications: To send commercial communications about similar"
 " products or services."
 msgstr "Comunicacions de màrqueting: enviar comunicacions comercials sobre productes o serveis similars."
 
-#: app/tmp/privacy_policy.html:82
+#: app/template/privacy_policy.html:82
 msgid "7. Data Retention Period"
 msgstr "7. Període de Retenció de Dades"
 
-#: app/tmp/privacy_policy.html:83
+#: app/template/privacy_policy.html:83
 #, python-format
 msgid ""
 "%(company_formal)s will retain your data for the period necessary to "
@@ -152,32 +152,32 @@ msgid ""
 " compliance."
 msgstr "%(company_formal)s conservarà les vostres dades durant el període necessari per complir els propòsits del processament de dades descrit anteriorment o per al compliment legal."
 
-#: app/tmp/privacy_policy.html:88
+#: app/template/privacy_policy.html:88
 msgid "8. Sharing Data with Third Parties"
 msgstr "8. Compartir Dades amb Tercers"
 
-#: app/tmp/privacy_policy.html:89
+#: app/template/privacy_policy.html:89
 msgid ""
 "We do not share personal data with third parties unless required by law "
 "or necessary for service provision."
 msgstr "No compartim dades personals amb tercers, tret que la llei ho requereixi o sigui necessària per a la prestació de serveis."
 
-#: app/tmp/privacy_policy.html:94
+#: app/template/privacy_policy.html:94
 #, python-format
 msgid "© %(year)s %(company_formal)s. All rights reserved."
 msgstr "© %(year)s %(company_formal)s. "
 
-#: app/tmp/terms_of_service.html:6
+#: app/template/terms_of_service.html:6
 #, python-format
 msgid "Terms and Conditions - %(company)s"
 msgstr "Termes i Condicions - %(company)s"
 
-#: app/tmp/terms_of_service.html:117
+#: app/template/terms_of_service.html:117
 #, python-format
 msgid "Terms and Conditions of the %(company)s Application"
 msgstr "Termes i condicions de la sol·licitud del %(company)s"
 
-#: app/tmp/terms_of_service.html:134
+#: app/template/terms_of_service.html:134
 #, python-format
 msgid ""
 "%(company)s, S.L. (hereinafter, “%(company_formal)s”) is a Spanish "
@@ -190,11 +190,11 @@ msgid ""
 " herein (the “General Terms and Conditions”)."
 msgstr "%(company)s, S.L. (en endevant, “%(company_formal)s”) és una empresa espanyola, amb domicili a efectes de contacte a %(company_address)s i N.I.F. %(company_nif)s, degudament inscrita al Registre Mercantil de Barcelona. %(company_formal)s és titular de tots els drets de Propietat Intel·lèctual com Industrial o qualsevol altre dret sobre l'aplicació "%(company)s" (en endevant, l'"Aplicació" o l'"App"). L'ús de l'App està subjecte als següents termes i condicions establerts al present document (en endevant, les "Condicions Generals")."
 
-#: app/tmp/terms_of_service.html:140
+#: app/template/terms_of_service.html:140
 msgid "1. Acceptance"
 msgstr "1. Acceptació"
 
-#: app/tmp/terms_of_service.html:141
+#: app/template/terms_of_service.html:141
 msgid ""
 "By accepting these Terms and Conditions, the User expressly agrees to be "
 "bound by the provisions contained herein. The use of the Application "
@@ -202,38 +202,38 @@ msgid ""
 "and Conditions."
 msgstr "Acceptant aquests termes i condicions, l'usuari es compromet expressament a estar obligat per les disposicions que es contenen aquí. "
 
-#: app/tmp/terms_of_service.html:145
+#: app/template/terms_of_service.html:145
 msgid "2. Purpose of the Application"
 msgstr "2. Propòsits de l'Aplicació"
 
-#: app/tmp/terms_of_service.html:146
+#: app/template/terms_of_service.html:146
 msgid ""
 "The Application aims to provide registered Users with a platform to "
 "create and participate in Activities. These activities enable interaction"
 " between Users."
 msgstr "L’aplicació pretén proporcionar als usuaris registrats una plataforma per crear i participar en activitats. "
 
-#: app/tmp/terms_of_service.html:148
+#: app/template/terms_of_service.html:148
 msgid "Register and create a profile."
 msgstr "Registra't i crea un perfil."
 
-#: app/tmp/terms_of_service.html:149
+#: app/template/terms_of_service.html:149
 msgid "Create and organize Activities."
 msgstr "Crear i organitzar activitats."
 
-#: app/tmp/terms_of_service.html:150
+#: app/template/terms_of_service.html:150
 msgid "Participate in and rate Activities."
 msgstr "Participa i activitats de taxa."
 
-#: app/tmp/terms_of_service.html:151
+#: app/template/terms_of_service.html:151
 msgid "Interact with other Users."
 msgstr "interactuar amb altres usuaris."
 
-#: app/tmp/terms_of_service.html:156
+#: app/template/terms_of_service.html:156
 msgid "3. Use of the Application"
 msgstr "3. Ús de l'Aplicació"
 
-#: app/tmp/terms_of_service.html:158
+#: app/template/terms_of_service.html:158
 #, python-format
 msgid ""
 "Users agree not to use the Application for illegal or prohibited purposes"
@@ -241,17 +241,17 @@ msgid ""
 "Users."
 msgstr "Els usuaris accepten no utilitzar la sol·licitud amb finalitats il·legals o prohibides i respectar els drets i els interessos del %(company_formal)s i altres usuaris."
 
-#: app/tmp/terms_of_service.html:161
+#: app/template/terms_of_service.html:161
 msgid ""
 "The User guarantees that the information provided during registration is "
 "accurate and up-to-date."
 msgstr "L’usuari garanteix que la informació proporcionada durant el registre és exacta i actualitzada."
 
-#: app/tmp/terms_of_service.html:165
+#: app/template/terms_of_service.html:165
 msgid "4. Intellectual Property Rights"
 msgstr "4. Drets de la Propietat Intel·lectual"
 
-#: app/tmp/terms_of_service.html:167
+#: app/template/terms_of_service.html:167
 #, python-format
 msgid ""
 "All rights to the Application are owned by %(company_formal)s. Users may "
@@ -259,11 +259,11 @@ msgid ""
 " authorization."
 msgstr "Tots els drets sobre la sol·licitud són propietat de %(company_formal)s. "
 
-#: app/tmp/terms_of_service.html:173
+#: app/template/terms_of_service.html:173
 msgid "5. Links"
 msgstr "5. Enllaços"
 
-#: app/tmp/terms_of_service.html:175
+#: app/template/terms_of_service.html:175
 #, python-format
 msgid ""
 "The Application may contain links to third-party websites. "
@@ -271,22 +271,22 @@ msgid ""
 "Users should review the terms and conditions of those sites."
 msgstr "L’aplicació pot contenir enllaços a llocs web de tercers. "
 
-#: app/tmp/terms_of_service.html:181
+#: app/template/terms_of_service.html:181
 msgid "6. Modification of Terms and Conditions"
 msgstr "6. Modificació dels Termes i Condicions"
 
-#: app/tmp/terms_of_service.html:183
+#: app/template/terms_of_service.html:183
 #, python-format
 msgid ""
 "%(company_formal)s reserves the right to modify these Terms and "
 "Conditions at any time. Users will be informed of any changes."
 msgstr "%(company_formal)s es reserva el dret a modificar aquests termes i condicions en qualsevol moment. "
 
-#: app/tmp/terms_of_service.html:189
+#: app/template/terms_of_service.html:189
 msgid "7. Liability"
 msgstr "7. Responsabilitat"
 
-#: app/tmp/terms_of_service.html:191
+#: app/template/terms_of_service.html:191
 #, python-format
 msgid ""
 "The User is responsible for making proper use of the Application and the "
@@ -294,44 +294,44 @@ msgid ""
 "arising from the use of the Application."
 msgstr "L'usuari és responsable de fer un ús adequat de l'aplicació i del contingut que publiquen. "
 
-#: app/tmp/terms_of_service.html:198
+#: app/template/terms_of_service.html:198
 #, python-format
 msgid "© %(year)s %(company)s, S.L. All rights reserved."
 msgstr "© %(year)s %(company)s, S.L. Tots els drets reservats"
 
-#: app/tmp/terms_of_service.html:200
+#: app/template/terms_of_service.html:200
 msgid "Privacy Policy"
 msgstr "Política de privacitat"
 
-#: app/tmp/validation_result.html:6
+#: app/template/validation_result.html:6
 msgid "Verification Result"
 msgstr "resultat de verificació"
 
-#: app/tmp/validation_result.html:62
+#: app/template/validation_result.html:62
 msgid "Cookiefy Logo"
 msgstr "Logotip de Cookiefy"
 
-#: app/tmp/validation_result.html:69
+#: app/template/validation_result.html:69
 msgid ""
 "Your account has been successfully verified. You can now sign in to the "
 "Cookiefy app."
 msgstr "el vostre compte s'ha verificat amb èxit. "
 
-#: app/tmp/validation_result.html:70
+#: app/template/validation_result.html:70
 msgid "If you have any issues, please contact our support team."
 msgstr "Si teniu problemes, poseu -vos en contacte amb el nostre equip de suport."
 
-#: app/tmp/validation_result.html:73
+#: app/template/validation_result.html:73
 msgid "Account Support"
 msgstr "Suport del compte"
 
-#: app/tmp/validation_result.html:76
+#: app/template/validation_result.html:76
 msgid ""
 "The verification process failed. Please ensure you entered the correct "
 "code sent to your email."
 msgstr "El procés de verificació ha fallat. "
 
-#: app/tmp/validation_result.html:77
+#: app/template/validation_result.html:77
 msgid ""
 "If the issue persists, the token might have expired. Try requesting a new"
 " verification code."

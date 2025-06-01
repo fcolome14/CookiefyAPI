@@ -28,8 +28,8 @@ app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
 # Expose static files for templates/assets (JS, CSS)
-app.mount("/static", StaticFiles(directory="app/tmp"), name="static")
-templates = Jinja2Templates(directory="app/tmp")
+app.mount("/static", StaticFiles(directory="app/template"), name="static")
+templates = Jinja2Templates(directory="app/template")
 
 # Expose uploaded images
 app.mount("/media", StaticFiles(directory="app/users/images"), name="media")
