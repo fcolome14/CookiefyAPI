@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, and_, select, insert, delete, func
+import sqlalchemy as sa
+from sqlalchemy import or_, and_, select, insert, delete, func, update, case
 from app.models.lists import List as ListModel
 from app.schemas.post import ListDelete, ListCreate
 from app.models.site import Site
@@ -11,6 +12,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from typing import Union, List, Optional
 from sqlalchemy.exc import IntegrityError
 import os
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from typing import Union, List, Type
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(BASE_DIR, "users", "images")
@@ -72,10 +75,10 @@ class PostRepository(IPostRepository):
             self.db.refresh(new_list)
             print("List created successfully with ID %d", new_list.id)
             return {"status": "success", "message": new_list}
-        except IntegrityError:
+        except IntegrityError as exc:
             self.db.rollback()
-            print("Failed to create list: List already exists")
-            return {"status": "error", "message": "Failed to create list: List already exists"}
+            print("Failed to create list: %s", exc)
+            return {"status": "error", "message": f"Failed to create list"}
         except Exception as exc:
             self.db.rollback()
             print("Unexpected error during user creation: %s", exc)
@@ -199,6 +202,59 @@ class PostRepository(IPostRepository):
             print("Error updating list_site_association for list %d: %s", list_id, e)
             return False
     
+
+    def update_metrics(
+        self,
+        model: Type[DeclarativeMeta],
+        column_name: str = "views",
+        record_ids: Union[int, List[int]] = None,
+        addition: bool = True,
+        prevent_negative: bool = True,
+    ) -> dict:
+        """
+        Increment or decrement a numeric metrics column for one or more records.
+
+        Args:
+            model (Type[DeclarativeMeta]): SQLAlchemy model class.
+            column_name (str): Column to update.
+            record_ids (int or List[int]): Record ID(s).
+            addition (bool): Increment if True; decrement if False.
+            prevent_negative (bool): Prevent values from going below zero.
+
+        Returns:
+            dict: Result status.
+        """
+        if isinstance(record_ids, int):
+            record_ids = [record_ids]
+        if not record_ids:
+            return {"status": "error", "message": "No record IDs provided"}
+
+        column_attr = getattr(model, column_name, None)
+        if column_attr is None:
+            return {"status": "error", "message": f"Column '{column_name}' not found in {model.__name__}"}
+
+        delta = 1 if addition else -1
+
+        if prevent_negative:
+            value_expr = case(
+                (column_attr + delta < 0, 0),
+                else_=column_attr + delta
+            )
+        else:
+            value_expr = column_attr + delta
+
+        stmt = (
+            update(model)
+            .where(model.id.in_(record_ids))
+            .values({column_attr: value_expr})
+        )
+
+        self.db.execute(stmt)
+        self.db.commit()
+
+        return {"status": "success", "message": f"{'Incremented' if addition else 'Decremented'} '{column_name}' for {len(record_ids)} record(s)."}
+
+
     @staticmethod
     def _delete_image_file(filename: str) -> bool:
         try:
@@ -242,10 +298,15 @@ class PostRepository(IPostRepository):
             return {"status": "error", "message": f"Error deleting image(s) {image_id}: {e}"}
         
     def delete_list(self, list_id: Union[int, List[int]]) -> dict:
-        """Delete one or more lists images"""
+        """Delete one or more lists and their site associations, updating counters."""
         try:
             if not isinstance(list_id, list):
                 list_id = [list_id]
+
+            site_ids = self.db.execute(
+                sa.select(list_site_association.c.site_id)
+                .where(list_site_association.c.list_id.in_(list_id))
+            ).scalars().all()
 
             assoc_delete_stmt = delete(list_site_association).where(
                 list_site_association.c.list_id.in_(list_id)
@@ -264,15 +325,25 @@ class PostRepository(IPostRepository):
             for obj in lists_to_delete:
                 self.db.delete(obj)
 
+            if site_ids:
+                self.update_metrics(
+                    model=Site,
+                    column_name="lists_count",
+                    record_ids=list(set(site_ids)),  # Ensure uniqueness
+                    addition=False
+                )
+
             self.db.commit()
             return {
-                "status": "success", 
-                "message": f"Deleted lists and associations for IDs: {list_id}",
+                "status": "success",
+                "message": f"Deleted lists and updated associated site counters for IDs: {list_id}",
                 "content": lists_to_delete
-                }
+            }
+
         except Exception as e:
             self.db.rollback()
             return {"status": "error", "message": f"Error deleting list(s) {list_id}: {e}"}
+
     
     def update_list(self, list_obj: ListModel) -> ListModel | None:
         """Update a list record."""

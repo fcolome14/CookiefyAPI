@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.lists import List as ListModel
+from app.models.site import Site
 from app.models.image import Image
 from app.schemas.post import (
     PostRead, 
@@ -135,6 +136,15 @@ class PostService(IPostService):
                     "status": "error",
                     "message": "Failed to update site associations"
                 }
+        
+        result_m = self.post_repo.update_metrics(
+            model=Site, 
+            column_name="lists_count", 
+            record_ids=incoming_site_ids,
+            addition=True)
+
+        if result_m["status"] == "error":
+            return result_m
 
         if result["status"] == "success":
             logger.info("List updated successfully with ID %d", list_obj.id)
@@ -155,7 +165,7 @@ class PostService(IPostService):
     async def delete_list(self, user_id: int, list_delete: ListDelete) -> PostRead | None:
         """Delete existing list(s)."""
         
-        fetched_list = self._check_list_object(list_delete.id)
+        fetched_list: ListModel = self._check_list_object(list_delete.id)
         if not fetched_list:
             msg = "Deletion not allowed: List not found"
             logger.error(msg)
@@ -170,10 +180,11 @@ class PostService(IPostService):
         result = self._delete_list(list_delete.id)
         if result["status"] == "success":
             deleted_lists = result["content"]
-            images_ids = [item.image for item in deleted_lists]
+            images_ids = [item.image for item in deleted_lists if item.image != 1]
             result_img = self.post_repo.delete_list_image(image_id=images_ids)
             if result_img["status"] == "error":
-                return result_img
+                pass
+        
         return result
     
     async def update_list(self, user_id: int, list_input: ListUpdate) -> PostRead | None:
@@ -207,29 +218,24 @@ class PostService(IPostService):
         status, content = "error", "Invalid upload"
 
         try:
-            # Check file extension
             ext = os.path.splitext(file.filename)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
                 return {"status": "error", "content": "Unsupported file format."}
 
-            # Check file size (in-memory)
             file_content = await file.read()
             size_mb = len(file_content) / (1024 * 1024)
             if size_mb > MAX_IMAGE_SIZE_MB:
                 return {"status": "error", "content": "File too large. Max 5MB."}
 
-            # Load and compress using Pillow
             image_stream = BytesIO(file_content)
             image = PILImage.open(image_stream)
 
-            # Resize and recompress
             image = image.convert("RGB")  # Ensure format
             image = image.resize((150, 150), PILImage.LANCZOS)
             output = BytesIO()
             image.save(output, format="JPEG", optimize=True, quality=70)
             output.seek(0)
 
-            # Save compressed image to disk
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             filename = f"{uuid4().hex}.jpg"
             file_storage = os.path.join(UPLOAD_DIR, filename) # Internal path
@@ -238,7 +244,6 @@ class PostService(IPostService):
             with open(file_storage, "wb") as f:
                 f.write(output.read())
 
-            # Store image metadata in DB
             image_record = Image(name=filename, path=file_path)
             content = self.post_repo.add_image_path(image_record)
             status = "success" if content else "error"
