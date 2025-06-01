@@ -10,6 +10,10 @@ from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Union, List, Optional
 from sqlalchemy.exc import IntegrityError
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+IMAGES_DIR = os.path.join(BASE_DIR, "users", "images")
 
 class IPostRepository(ABC):
     """Interface for post repository operations"""
@@ -183,8 +187,50 @@ class PostRepository(IPostRepository):
             print("Error updating list_site_association for list %d: %s", list_id, e)
             return False
     
+    @staticmethod
+    def _delete_image_file(filename: str) -> bool:
+        try:
+            image_folder = os.path.join(IMAGES_DIR, filename)
+            if os.path.exists(image_folder):
+                os.remove(image_folder)
+                return True
+            else:
+                print(f"File not found: {image_folder}")
+                return False
+        except Exception as e:
+            print(f"Error deleting file {image_folder}: {e}")
+            return False
+    
+    def delete_list_image(self, image_id: Union[int, List[int]]) -> dict:
+        """Delete one or more lists images"""
+        try:
+            if not isinstance(image_id, list):
+                image_id = [image_id]
+
+            images_to_delete: Image = (
+                self.db.query(Image)
+                .filter(Image.id.in_(image_id))
+                .all()
+            )
+
+            if not images_to_delete:
+                return {"status": "error", "message": f"No images found with ID(s): {image_id}"}
+
+            for obj in images_to_delete:
+                self._delete_image_file(filename=obj.name)
+                self.db.delete(obj)
+
+            self.db.commit()
+            return {
+                "status": "success", 
+                "message": f"Deleted images with IDs: {image_id}"
+                }
+        except Exception as e:
+            self.db.rollback()
+            return {"status": "error", "message": f"Error deleting image(s) {image_id}: {e}"}
+        
     def delete_list(self, list_id: Union[int, List[int]]) -> dict:
-        """Delete one or more lists and their site associations by ID(s)."""
+        """Delete one or more lists images"""
         try:
             if not isinstance(list_id, list):
                 list_id = [list_id]
@@ -207,7 +253,11 @@ class PostRepository(IPostRepository):
                 self.db.delete(obj)
 
             self.db.commit()
-            return {"status": "success", "message": f"Deleted lists and associations for IDs: {list_id}"}
+            return {
+                "status": "success", 
+                "message": f"Deleted lists and associations for IDs: {list_id}",
+                "content": lists_to_delete
+                }
         except Exception as e:
             self.db.rollback()
             return {"status": "error", "message": f"Error deleting list(s) {list_id}: {e}"}

@@ -22,7 +22,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "images")
+UPLOAD_DIR = os.path.join(BASE_DIR, "users", "images")
 MAX_IMAGE_SIZE_MB = 15
 ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
@@ -151,7 +151,7 @@ class PostService(IPostService):
         """Delete existing list(s)."""
         
         return self.post_repo.delete_list(list_id)
-    
+        
     async def delete_list(self, user_id: int, list_delete: ListDelete) -> PostRead | None:
         """Delete existing list(s)."""
         
@@ -167,7 +167,14 @@ class PostService(IPostService):
             logger.error(msg)
             return {"status": "error", "message": msg}
         
-        return self._delete_list(list_delete.id)    
+        result = self._delete_list(list_delete.id)
+        if result["status"] == "success":
+            deleted_lists = result["content"]
+            images_ids = [item.image for item in deleted_lists]
+            result_img = self.post_repo.delete_list_image(image_id=images_ids)
+            if result_img["status"] == "error":
+                return result_img
+        return result
     
     async def update_list(self, user_id: int, list_input: ListUpdate) -> PostRead | None:
         """Update an existing list."""

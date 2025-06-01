@@ -32,7 +32,7 @@ app.mount("/static", StaticFiles(directory="app/tmp"), name="static")
 templates = Jinja2Templates(directory="app/tmp")
 
 # Expose uploaded images
-app.mount("/media", StaticFiles(directory="app/uploads/images"), name="media")
+app.mount("/media", StaticFiles(directory="app/users/images"), name="media")
 
 @app.on_event("startup")
 async def seed_database():
