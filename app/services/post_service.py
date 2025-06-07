@@ -6,9 +6,11 @@ from app.schemas.post import (
     PostRead, 
     ListCreate, 
     ListUpdate, 
-    ListDelete, 
+    ListDelete,
+    ListKPIs, 
     ListRead,
-    SiteRead)
+    SiteRead,
+    SiteKPIs)
 from app.services.auth_service import AuthCodeManager
 from app.utils.date_time import TimeUtils
 import logging
@@ -19,6 +21,9 @@ import os
 from uuid import uuid4
 from PIL import Image as PILImage
 from io import BytesIO
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from typing import Union, List, Type
+from app.algorithms import algorithm
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +63,7 @@ class PostService(IPostService):
         self.db = db
         self.auth_code_service = auth_code_service
         self.time_utils = time_utils
+        self.score_algorithm = algorithm.Score()
         self.post_repo = PostRepository(db)
 
 
@@ -218,26 +224,46 @@ class PostService(IPostService):
 
 
     async def get_specific_list(self, list_id: int) -> PostRead | None:
+        """Fetch a specific list by its ID and update visit count."""
+
         fetched_list = self.post_repo.get_list_by_list_id(list_id=list_id)
         if fetched_list:
             result = self.post_repo.update_metrics(ListModel, "visit_count", list_id, addition=True)
+
             if result["status"] == "error":
                 return {"status": "error", "message": result["message"]}
+            
+            result = self._update_score(list_id, ListModel)
+            if 'error' in result:
+                return {"status": "error", "message": result['message']}
+            
             return {"status": "success", "content": ListRead.model_validate(fetched_list)}
+        
         return {"status": "error", "message": "List not found"}
     
 
     async def get_specific_site(self, site_id: int) -> PostRead | None:
+        """Fetch a specific site by its ID and update click count."""
+
         fetched_site = self.post_repo.get_site_by_site_id(site_id=site_id)
         if fetched_site:
             result = self.post_repo.update_metrics(Site, "click_count", site_id, addition=True)
+
             if result["status"] == "error":
                 return {"status": "error", "message": result["message"]}
+            
+            result = self._update_score(site_id, Site)
+            if 'error' in result:
+                return {"status": "error", "message": result['message']}
+            
             return {"status": "success", "content": SiteRead.model_validate(fetched_site)}
+        
         return {"status": "error", "message": "Site not found"}
     
 
     async def get_image(self, image_id: int) -> PostRead | None:
+        """Fetch a specific image by its ID."""
+
         status, content = "error", "Not found"
         if image_id:
             content = self.post_repo.get_image(image_id)
@@ -247,6 +273,8 @@ class PostService(IPostService):
     
 
     async def upload_image(self, file) -> dict:
+        """Upload an image file, validate it, and save it to the server."""
+
         status, content = "error", "Invalid upload"
 
         try:
@@ -285,6 +313,49 @@ class PostService(IPostService):
 
         return {"status": status, "content": content}
     
+    def _update_score(self, item_id: int, model: Type[DeclarativeMeta]) -> dict:
+
+        if model == ListModel:
+            result = self.post_repo.get_record_kpis(ListModel, item_id)
+            if 'error' in result:
+                return {"status": "error", "message": result['message']}
+            
+            score_algorithm = self.score_algorithm.compute_list_score(
+                input_metrics=ListKPIs(**result['content'])
+                )
+            
+            result = self.post_repo.update_scores(
+                model=ListModel, 
+                column_name="score", 
+                record_id=item_id, 
+                score=score_algorithm
+            )
+
+            if result['status'] == 'error':
+                return {"status": "error", "message": result['message']}
+            
+            return result
+        
+        elif model == Site:
+            result = self.post_repo.get_record_kpis(Site, item_id)
+            if 'error' in result:
+                return {"status": "error", "message": result['message']}
+            
+            score_algorithm = self.score_algorithm.compute_site_score(
+                input_metrics=SiteKPIs(**result['content'])
+                )
+            
+            result = self.post_repo.update_scores(
+                model=Site, 
+                column_name="score", 
+                record_id=item_id, 
+                score=score_algorithm
+            )
+
+            if result['status'] == 'error':
+                return {"status": "error", "message": result['message']}
+            
+            return result
 
     def get_site(self) -> PostRead | None:
         pass

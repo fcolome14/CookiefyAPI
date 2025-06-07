@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session, joinedload
 import sqlalchemy as sa
 from sqlalchemy import or_, and_, select, insert, delete, func, update, case
 from app.models.lists import List as ListModel
-from app.schemas.post import ListDelete, ListCreate
+from app.schemas.post import ListKPIs, SiteKPIs
 from app.models.site import Site
 from app.models.user import User
 from app.models.image import Image
@@ -270,6 +270,79 @@ class PostRepository(IPostRepository):
         return {"status": "success", "message": f"{'Incremented' if addition else 'Decremented'} '{column_name}' for {len(record_ids)} record(s)."}
 
 
+    def update_scores(
+        self,
+        model: Type[DeclarativeMeta],
+        column_name: str = "score",
+        record_id: int = None,
+        score: float = 0.0,
+    ) -> dict:
+        """
+        """
+
+        if not record_id:
+            return {"status": "error", "message": "No record IDs provided"}
+
+        column_attr = getattr(model, column_name, None)
+        if column_attr is None:
+            return {"status": "error", "message": f"Column '{column_name}' not found in {model.__name__}"}
+
+        stmt = (
+            update(model)
+            .where(model.id == record_id)
+            .values({column_attr: score})
+        )
+
+        self.db.execute(stmt)
+        self.db.commit()
+
+        return {"status": "success", "message": "Updated score successfully."}
+
+
+    def get_record_kpis(
+        self,
+        model: Type[DeclarativeMeta],
+        record_id: int,
+    ) -> dict:
+        if not record_id:
+            return {"status": "error", "message": "No record ID provided"}
+
+        if model == ListModel:
+            stmt = select(
+                ListModel.id,
+                ListModel.likes,
+                ListModel.shares,
+                ListModel.saves,
+                ListModel.visit_count,
+                ListModel.image,
+                ListModel.created_at
+            ).where(ListModel.id == record_id)
+
+            SchemaClass = ListKPIs
+
+        elif model == Site:
+            stmt = select(
+                Site.id,
+                Site.lists_count,
+                Site.click_count
+            ).where(Site.id == record_id)
+
+            SchemaClass = SiteKPIs
+
+        else:
+            return {"status": "error", "message": "Unsupported model type"}
+
+        result = self.db.execute(stmt).fetchone()
+        if result is None:
+            return {"status": "error", "message": "Record not found"}
+
+        # Convert to Pydantic schema
+        data_dict = dict(result._mapping)
+        parsed = SchemaClass(**data_dict)
+
+        return {"status": "success", "content": parsed.model_dump()}
+
+
     @staticmethod
     def _delete_image_file(filename: str) -> bool:
         try:
@@ -370,3 +443,4 @@ class PostRepository(IPostRepository):
             self.db.rollback()
             print(f"Database update failed: {e}")
             return {"status": "error", "message": "Database update failed."}
+  
