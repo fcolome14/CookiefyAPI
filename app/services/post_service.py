@@ -7,18 +7,18 @@ from app.schemas.post import (
     ListCreate, 
     ListUpdate, 
     ListDelete, 
-    ListRead)
+    ListRead,
+    SiteRead)
 from app.services.auth_service import AuthCodeManager
 from app.utils.date_time import TimeUtils
 import logging
 from app.repositories.post_repo import PostRepository
 from abc import ABC, abstractmethod
-from typing import Union, List, Optional
+from typing import Union, List
 import os
 from uuid import uuid4
 from PIL import Image as PILImage
 from io import BytesIO
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +71,7 @@ class PostService(IPostService):
 
         return self._create_new_list(user_id, list_input)
     
+
     def _check_list_name(self, user_id: int, list_name: str) -> bool:
         """Check if a list name already exists for a given user."""
         existing_list = self.post_repo.get_list_by_name(user_id=user_id, list_name=list_name)
@@ -78,6 +79,7 @@ class PostService(IPostService):
             return existing_list
         return None
     
+
     def _check_list_object(self, list_id: Union[int, List[int]]) -> bool:
         """Check if a `list` or array of `list` objects already exists."""
         existing_list = self.post_repo.get_list_by_list_id(list_id=list_id)
@@ -85,18 +87,21 @@ class PostService(IPostService):
             return existing_list
         return None
     
+
     def _check_list_owner(self, user_id: int, list_id: Union[int, List[int]]) -> bool:
         """Check if a `list` or array of `list` objects are from a giver user."""
-        fetched_list = self.post_repo.get_specific_list(user_id=user_id, list_id=list_id)
+        fetched_list = self.post_repo.get_list_by_user_id(user_id=user_id, list_id=list_id)
         if fetched_list:
             return fetched_list
         return None
     
+
     def _create_new_list(self, user_id: int, list_input: ListCreate) -> bool:
         """Creates a new list."""
         
         return self.post_repo.add_list(user_id, list_input)
     
+
     def _update_list(self, list_obj: ListModel, list_new: ListUpdate) -> dict:
         """Updates a list record, including list_site_association."""
         updated = False
@@ -157,11 +162,13 @@ class PostService(IPostService):
             "payload": result.get("message", list_obj),
         }
     
+
     def _delete_list(self, list_id: Union[int, List[int]]) -> PostRead | None:
         """Delete existing list(s)."""
         
         return self.post_repo.delete_list(list_id)
         
+
     async def delete_list(self, user_id: int, list_delete: ListDelete) -> PostRead | None:
         """Delete existing list(s)."""
         
@@ -187,6 +194,7 @@ class PostService(IPostService):
         
         return result
     
+
     async def update_list(self, user_id: int, list_input: ListUpdate) -> PostRead | None:
         """Update an existing list."""
         fetched_list = self._check_list_object(list_input.id)
@@ -203,9 +211,32 @@ class PostService(IPostService):
         serialized = [ListRead.model_validate(lst) for lst in fetched_lists]
         return {"status": "success", "lists": serialized}
     
+
     async def get_nearby_lists(self, location: str) -> PostRead | None:
+        # TODO: Implement location-based fetching
         fetched_lists = self.post_repo.get_nearby_lists()
+
+
+    async def get_specific_list(self, list_id: int) -> PostRead | None:
+        fetched_list = self.post_repo.get_list_by_list_id(list_id=list_id)
+        if fetched_list:
+            result = self.post_repo.update_metrics(ListModel, "visit_count", list_id, addition=True)
+            if result["status"] == "error":
+                return {"status": "error", "message": result["message"]}
+            return {"status": "success", "content": ListRead.model_validate(fetched_list)}
+        return {"status": "error", "message": "List not found"}
     
+
+    async def get_specific_site(self, site_id: int) -> PostRead | None:
+        fetched_site = self.post_repo.get_site_by_site_id(site_id=site_id)
+        if fetched_site:
+            result = self.post_repo.update_metrics(Site, "click_count", site_id, addition=True)
+            if result["status"] == "error":
+                return {"status": "error", "message": result["message"]}
+            return {"status": "success", "content": SiteRead.model_validate(fetched_site)}
+        return {"status": "error", "message": "Site not found"}
+    
+
     async def get_image(self, image_id: int) -> PostRead | None:
         status, content = "error", "Not found"
         if image_id:
@@ -214,6 +245,7 @@ class PostService(IPostService):
 
         return {"status": status, "content": content}
     
+
     async def upload_image(self, file) -> dict:
         status, content = "error", "Invalid upload"
 
@@ -253,5 +285,6 @@ class PostService(IPostService):
 
         return {"status": status, "content": content}
     
+
     def get_site(self) -> PostRead | None:
         pass

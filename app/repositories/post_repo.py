@@ -42,11 +42,11 @@ class IPostRepository(ABC):
         pass
 
     @abstractmethod
-    def get_lists_from_user_id(self, list_id: Union[int, List[int]]) -> ListModel | None:
+    def get_lists_from_owner_id(self, list_id: Union[int, List[int]]) -> ListModel | None:
         pass
     
     @abstractmethod
-    def get_specific_list(self, user_id: int, list_id: Union[int, List[int]]) -> Union[ListModel, List[ListModel], None]:
+    def get_list_by_user_id(self, user_id: int, list_id: Union[int, List[int]]) -> Union[ListModel, List[ListModel], None]:
         pass
     
     @abstractmethod
@@ -106,10 +106,24 @@ class PostRepository(IPostRepository):
             .first()
         )
     
-    def get_specific_list(
+    def get_site_by_site_id(self, site_id: Union[int, List[int]]) -> Site | None:
+        """Fetch a site(s) by site_id."""
+        if isinstance(site_id, list):
+            return (
+                self.db.query(Site)
+                .filter(Site.id.in_(site_id))  # noqa: E712
+                .all()
+            )
+        return (
+            self.db.query(Site)
+            .filter(Site.id == site_id)  # noqa: E712
+            .first()
+        )
+    
+    def get_list_by_user_id(
         self, user_id: int, 
         list_id: Union[int, List[int]]) -> Union[ListModel, List[ListModel], None]:
-        """Fetch an active list(s) by user_id."""
+        """Fetch an active list(s) owned by a certain user_id."""
         if isinstance(list_id, list):
             return (
                 self.db.query(ListModel)
@@ -127,8 +141,9 @@ class PostRepository(IPostRepository):
                 ListModel.owner == user_id)
             .first()
         )
+        
     
-    def get_lists_from_user_id(self, user_id: int) -> list[ListModel]:
+    def get_lists_from_owner_id(self, user_id: int) -> list[ListModel]:
         return (
             self.db.query(ListModel)
             .options(

@@ -120,8 +120,8 @@ async def delete_list(
         },
     )
 
-@router.get("/get-list", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
-async def get_list(
+@router.get("/get-all-list", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
+async def get_all_list(
     request: Request,
     user_id: int = Depends(get_current_user),
     post_service: PostService = Depends(get_post_service),
@@ -169,6 +169,62 @@ async def get_nearby_lists(
     return SuccessResponse(
         message=None,
         data={"lists": result["lists"]},
+        meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+    )
+
+@router.get("/get-list/{list_id}", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
+async def get_list(
+    request: Request,
+    list_id: int,
+    _: int = Depends(get_current_user),
+    post_service: PostService = Depends(get_post_service),
+):
+    """Endpoint to get a specific list."""
+    result = await post_service.get_specific_list(list_id)
+
+    if result["status"] == "error":
+        return ErrorResponse(
+            message=result["message"],
+            meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+        )
+        
+    return SuccessResponse(
+        message=None,
+        data={"content": result["content"]},
+        meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+    )
+
+@router.get("/get-site/{site_id}", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
+async def get_site(
+    request: Request,
+    site_id: int,
+    _: int = Depends(get_current_user),
+    post_service: PostService = Depends(get_post_service),
+):
+    """Endpoint to get a specific list."""
+    result = await post_service.get_specific_site(site_id)
+
+    if result["status"] == "error":
+        return ErrorResponse(
+            message=result["message"],
+            meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+        )
+        
+    return SuccessResponse(
+        message=None,
+        data={"content": result["content"]},
         meta={
             "request_id": request.headers.get("request-id", "default_request_id"),
             "client": request.headers.get("client-type", "unknown"),
