@@ -4,13 +4,13 @@ from app.schemas.post import ListCreate
 def test_create_list_success(client):
     payload = {
         "name": "My List",
-        "description": "desc",
+        "description": "this is a test list",
         "accepts_contributions": False,
         "is_public": True
     }
     response = client.post("/posts/create-list", json=payload)
     assert response.status_code == 201
-    assert response.json()["message"] == "Failed to create list. This list already exists."
+    assert response.json()["message"] == "List created successfully."
 
 def test_create_list_duplicate(client):
     payload = {
@@ -20,7 +20,7 @@ def test_create_list_duplicate(client):
         "is_public": True
     }
     # First insert
-    response1 = client.post("/posts/create-list", json=payload)
+    _ = client.post("/posts/create-list", json=payload)
     # Duplicate insert
     response2 = client.post("/posts/create-list", json=payload)
     
