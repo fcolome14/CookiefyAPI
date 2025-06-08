@@ -30,10 +30,6 @@ class Score(IAlgorithms):
     """Scoring algorithm computation."""
 
     def __init__(self):
-        # self.db = db
-        # self.auth_code_service = auth_code_service
-        # self.time_utils = time_utils
-        # self.post_repo = PostRepository(db)
         pass
 
 
@@ -68,7 +64,7 @@ class Score(IAlgorithms):
         )
 
         penalty_factor = 1 - penalty
-        score = bs * penalty_factor if not input_metrics.image else bs
+        score = bs * penalty_factor if input_metrics.image == 1 else bs
         score = round(score, 5)
 
         return max(score, 0.0)
@@ -80,7 +76,7 @@ class Score(IAlgorithms):
         wc = 0.05
         wl = 1.5
         
-        score = wc * input_metrics.click_count + wl * input_metrics.lists_count
+        score = (wc * input_metrics.click_count + wl * input_metrics.lists_count)/100
         score = round(score, 5)
 
         return max(score, 0.0)
