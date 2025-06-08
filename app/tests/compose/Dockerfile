@@ -22,6 +22,8 @@ RUN poetry install --only main,test --no-interaction --no-root
 # Copy the rest of the project
 COPY . .
 
+RUN mkdir -p app/users/images
+
 COPY app/tests/compose/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
