@@ -173,7 +173,7 @@ class PostRepository(IPostRepository):
     def get_image(self, image_id: int) -> str:
         return self.db.query(Image).get(image_id)
     
-    def add_image_path(self, image: Image) -> str:
+    def add_image_path(self, image: Image) -> Image:
         self.db.add(image)
         self.db.commit()
         self.db.refresh(image)
@@ -439,6 +439,18 @@ class PostRepository(IPostRepository):
             self.db.commit()
             self.db.refresh(list_obj)
             return {"status": "success", "message": list_obj}
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            print(f"Database update failed: {e}")
+            return {"status": "error", "message": "Database update failed."}
+    
+    def update_site(self, site_obj: Site) -> Site | None:
+        """Update a site record."""
+        # TODO: Refactor with a more generic update method. Merge update_list too
+        try:
+            self.db.commit()
+            self.db.refresh(site_obj)
+            return {"status": "success", "message": site_obj}
         except SQLAlchemyError as e:
             self.db.rollback()
             print(f"Database update failed: {e}")

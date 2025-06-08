@@ -10,6 +10,8 @@ from app.utils.date_time import TimeUtils
 from app.db.session import get_db
 from io import BytesIO
 from fastapi.responses import StreamingResponse, FileResponse 
+from app.schemas.media import UploadImage
+from fastapi import Form
 
 
 router = APIRouter(prefix="/images", tags=["Images"])
@@ -48,11 +50,14 @@ async def get_image_content_database(
 @router.post("/upload-image/", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
 async def upload_image(
     request: Request,
+    id: int = Form(...),
+    is_list: bool = Form(...),
     file: UploadFile = File(...), 
     user_id: int = Depends(get_current_user),
-    post_service: PostService = Depends(get_post_service)):
+    post_service: PostService = Depends(get_post_service),
+):
 
-    result = await post_service.upload_image(file=file)
+    result = await post_service.upload_image(file=file, is_list=is_list, id_metadata=id)
 
     if result["status"] == "error":
         return ErrorResponse(
