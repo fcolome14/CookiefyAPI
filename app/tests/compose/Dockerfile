@@ -22,4 +22,9 @@ RUN poetry install --only main,test --no-interaction --no-root
 # Copy the rest of the project
 COPY . .
 
-CMD ["pytest", "-v"]
+COPY app/tests/compose/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+# RUN: docker-compose -f app/tests/compose/docker-compose.yml up --build
