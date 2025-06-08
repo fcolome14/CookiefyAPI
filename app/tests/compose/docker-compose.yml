@@ -3,12 +3,14 @@ version: "3.9"
 services:
   db:
     image: postgres:15
+    ports:
+      - "5433:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: test_pass
-      POSTGRES_DB: cookiefy_test
-    ports:
-      - "5433:5432"
+      POSTGRES_DB: postgres
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
@@ -29,7 +31,8 @@ services:
       DATABASE_PASSWORD: test_pass
       DATABASE_HOSTNAME: db
       DATABASE_PORT: 5432
-      DATABASE_NAME: cookiefy_test
+      DATABASE_NAME: cookiefy
+      IMAGE_DOMAIN: http://localhost:8000
       DATABASE_URL: postgresql://postgres:test_pass@db:5432/cookiefy_test
       SECRET_KEY: testsecret
       REFRESH_SECRET_KEY: testrefresh
@@ -51,4 +54,4 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["pytest", "-v"]
+    command: []
