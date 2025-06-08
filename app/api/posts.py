@@ -1,18 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.orm import Session
 from app.schemas.responses import SuccessResponse, ErrorResponse
-from app.schemas.post import UserLocation
 from app.schemas.post import ListCreate, ListUpdate, ListDelete
 from app.services.post_service import PostService
-from app.models.lists import List
+from app.models.lists import List as ListModel
 from app.models.image import Image
 from app.core.security import get_current_user
 from app.services.auth_service import NumericAuthCode, AuthCodeManager
 from app.utils.date_time import TimeUtils
+from app.utils.geocoding import get_location_details
 from app.db.session import get_db
 from io import BytesIO
 from fastapi.responses import StreamingResponse
-from typing import Union
+from typing import Union, List
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -42,7 +42,7 @@ async def create_new_list(
         },
         )
     
-    list: List = list_result["message"]
+    list: ListModel = list_result["message"]
     return SuccessResponse(
         message="List created successfully.",
         data={
@@ -75,7 +75,7 @@ async def update_list(
         },
         )
     
-    list: List = list_result["payload"]
+    list: ListModel = list_result["payload"]
     return SuccessResponse(
         message="List updated successfully.",
         data={
@@ -148,33 +148,33 @@ async def get_all_list(
         },
     )
 
-@router.get("/get-nearby-lists", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
-async def get_nearby_lists(
-    request: Request,
-    user_location: UserLocation,
-    user_id: int = Depends(get_current_user),
-    post_service: PostService = Depends(get_post_service),
-):
-    """Endpoint to get lists nearby a user's location."""
-    result = await post_service.get_nearby_lists(user_location.location)
+# @router.get("/get-nearby-lists", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
+# async def get_nearby_lists(
+#     request: Request,
+#     coordinates: List[float] = Query(..., description="Format: [longitude, latitude]"),
+#     user_id: int = Depends(get_current_user),
+#     post_service: PostService = Depends(get_post_service),
+# ):
+#     """Endpoint to get lists nearby a user's location."""
+#     result = await post_service.get_nearby_lists(coordinates.location)
 
-    if result["status"] == "error":
-        return ErrorResponse(
-            message=result["message"],
-            meta={
-            "request_id": request.headers.get("request-id", "default_request_id"),
-            "client": request.headers.get("client-type", "unknown"),
-        },
-        )
+#     if result["status"] == "error":
+#         return ErrorResponse(
+#             message=result["message"],
+#             meta={
+#             "request_id": request.headers.get("request-id", "default_request_id"),
+#             "client": request.headers.get("client-type", "unknown"),
+#         },
+#         )
         
-    return SuccessResponse(
-        message=None,
-        data={"lists": result["lists"]},
-        meta={
-            "request_id": request.headers.get("request-id", "default_request_id"),
-            "client": request.headers.get("client-type", "unknown"),
-        },
-    )
+#     return SuccessResponse(
+#         message=None,
+#         data={"lists": result["lists"]},
+#         meta={
+#             "request_id": request.headers.get("request-id", "default_request_id"),
+#             "client": request.headers.get("client-type", "unknown"),
+#         },
+#     )
 
 @router.get("/get-list/{list_id}", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
 async def get_list(
@@ -213,6 +213,39 @@ async def get_site(
 ):
     """Endpoint to get a specific list."""
     result = await post_service.get_specific_site(site_id)
+
+    if result["status"] == "error":
+        return ErrorResponse(
+            message=result["message"],
+            meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+        )
+        
+    return SuccessResponse(
+        message=None,
+        data={"content": result["content"]},
+        meta={
+            "request_id": request.headers.get("request-id", "default_request_id"),
+            "client": request.headers.get("client-type", "unknown"),
+        },
+    )
+
+@router.get("/get-trendings/{lat}/{lon}", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
+async def get_trendings(
+    request: Request,
+    lat: float,
+    lon: float,
+    _: int = Depends(get_current_user),
+    post_service: PostService = Depends(get_post_service),
+):
+    """Endpoint to get trendings and suggestions based on score."""
+    location_str = get_location_details(
+        lat=lat,
+        lon=lon
+    )
+    result = await post_service.get_trendings(location_str)
 
     if result["status"] == "error":
         return ErrorResponse(

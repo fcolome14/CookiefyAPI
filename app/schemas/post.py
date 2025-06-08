@@ -51,9 +51,6 @@ class ImageRead(BaseModel):
     path: str
     model_config = ConfigDict(from_attributes=True)
 
-class UserLocation(BaseModel):
-    location: str
-
 class ListKPIs(BaseModel):
     id: int
     likes: int
@@ -69,6 +66,34 @@ class SiteKPIs(BaseModel):
 
 class Score(BaseModel):
     score: float
+
+class ListBasicRead(BaseModel):
+    id: int
+    name: str
+    image_file: Optional[ImageRead]
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("image_file")
+    def serialize_image(self, image_file: Optional[ImageRead]) -> Optional[str]:
+        if image_file:
+            print("DEBUG → path:", image_file.path)
+            return f"{settings.image_domain}/{image_file.path}"
+        return None
+
+class SiteBasicRead(BaseModel):
+    id: int
+    name: str
+    image: Optional[ImageRead]
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("image")
+    def serialize_image(self, image_file: Optional[ImageRead]) -> Optional[str]:
+        if image_file:
+            print("DEBUG → path:", image_file.path)
+            return f"{settings.image_domain}/{image_file.path}"
+        return None
 
 class ListRead(BaseModel):
     id: int

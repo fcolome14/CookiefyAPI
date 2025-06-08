@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 def get_geolocator() -> Nominatim:
     return Nominatim(user_agent=settings.user_agent)
 
-
 def get_location_details(lat: float, lon: float) -> dict:
     """
     Retrieves detailed location information for given latitude and longitude coordinates.
