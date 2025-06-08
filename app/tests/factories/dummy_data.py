@@ -50,7 +50,7 @@ def create_dummy_list(index=0, user_id=None, image_id=None) -> ListModel:
         shares=random.randint(0, 50),
         saves=random.randint(0, 50),
         image=1,
-        is_banned=random.choice([False, False, True]),
+        is_banned=random.choice([False, False, False]),
         is_public=random.choice([True, True, False]),
         accepts_contributions=random.choice([True, False]),
         created_at=fake.date_time_between(start_date="-30d", end_date="now", tzinfo=timezone.utc),
