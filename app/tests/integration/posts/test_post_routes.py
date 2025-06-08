@@ -9,6 +9,7 @@ def list_payload():
         "is_public": True
     }
 
+
 def test_create_list_success(client, list_payload):
     response = client.post("/posts/create-list", json=list_payload)
     assert response.status_code == 201
@@ -16,6 +17,7 @@ def test_create_list_success(client, list_payload):
     assert data["message"] == "List created successfully."
     assert "id" in data["data"]
     assert "meta" in data
+
 
 def test_create_list_duplicate(client):
     payload = {
@@ -33,6 +35,7 @@ def test_create_list_duplicate(client):
     assert "already exists" in data["message"].lower()
     assert "meta" in data
 
+
 def test_get_list_success(client):
     response = client.get("/posts/get-list")
     assert response.status_code == 200
@@ -40,6 +43,7 @@ def test_get_list_success(client):
     assert "lists" in data["data"]
     assert isinstance(data["data"]["lists"], list)
     assert "meta" in data
+
 
 def test_update_list_success(client):
     update_payload = {
@@ -55,6 +59,7 @@ def test_update_list_success(client):
     assert data["data"]["name"] == "Updated List Name"
     assert "meta" in data
 
+
 def test_update_list_not_found(client):
     payload = {
         "id": 9999,
@@ -65,6 +70,7 @@ def test_update_list_not_found(client):
     data = response.json()
     assert "not found" in data["message"].lower()
 
+
 def test_delete_list_success(client):
     delete_payload = {"id": [2]}
     response = client.request("DELETE", "/posts/delete-list", json=delete_payload)
@@ -72,6 +78,7 @@ def test_delete_list_success(client):
     data = response.json()
     assert "deleted successfully" in data["message"].lower()
     assert "meta" in data
+
 
 def test_delete_list_not_found(client):
     payload = {"id": [99999]}
