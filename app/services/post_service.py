@@ -1,23 +1,29 @@
 from sqlalchemy.orm import Session
 from app.models.lists import List as ListModel
+from app.models.site import Site
 from app.models.image import Image
 from app.schemas.post import (
     PostRead, 
     ListCreate, 
     ListUpdate, 
-    ListDelete, 
-    ListRead)
+    ListDelete,
+    ListKPIs, 
+    ListRead,
+    SiteRead,
+    SiteKPIs)
 from app.services.auth_service import AuthCodeManager
 from app.utils.date_time import TimeUtils
 import logging
 from app.repositories.post_repo import PostRepository
 from abc import ABC, abstractmethod
-from typing import Union, List, Optional
+from typing import Union, List
 import os
 from uuid import uuid4
 from PIL import Image as PILImage
 from io import BytesIO
-from app.core.config import settings
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from typing import Union, List, Type
+from app.algorithms import algorithm
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +63,7 @@ class PostService(IPostService):
         self.db = db
         self.auth_code_service = auth_code_service
         self.time_utils = time_utils
+        self.score_algorithm = algorithm.Score()
         self.post_repo = PostRepository(db)
 
 
@@ -70,6 +77,7 @@ class PostService(IPostService):
 
         return self._create_new_list(user_id, list_input)
     
+
     def _check_list_name(self, user_id: int, list_name: str) -> bool:
         """Check if a list name already exists for a given user."""
         existing_list = self.post_repo.get_list_by_name(user_id=user_id, list_name=list_name)
@@ -77,6 +85,7 @@ class PostService(IPostService):
             return existing_list
         return None
     
+
     def _check_list_object(self, list_id: Union[int, List[int]]) -> bool:
         """Check if a `list` or array of `list` objects already exists."""
         existing_list = self.post_repo.get_list_by_list_id(list_id=list_id)
@@ -84,18 +93,21 @@ class PostService(IPostService):
             return existing_list
         return None
     
+
     def _check_list_owner(self, user_id: int, list_id: Union[int, List[int]]) -> bool:
         """Check if a `list` or array of `list` objects are from a giver user."""
-        fetched_list = self.post_repo.get_specific_list(user_id=user_id, list_id=list_id)
+        fetched_list = self.post_repo.get_list_by_user_id(user_id=user_id, list_id=list_id)
         if fetched_list:
             return fetched_list
         return None
     
+
     def _create_new_list(self, user_id: int, list_input: ListCreate) -> bool:
         """Creates a new list."""
         
         return self.post_repo.add_list(user_id, list_input)
     
+
     def _update_list(self, list_obj: ListModel, list_new: ListUpdate) -> dict:
         """Updates a list record, including list_site_association."""
         updated = False
@@ -135,6 +147,15 @@ class PostService(IPostService):
                     "status": "error",
                     "message": "Failed to update site associations"
                 }
+        
+        result_m = self.post_repo.update_metrics(
+            model=Site, 
+            column_name="lists_count", 
+            record_ids=incoming_site_ids,
+            addition=True)
+
+        if result_m["status"] == "error":
+            return result_m
 
         if result["status"] == "success":
             logger.info("List updated successfully with ID %d", list_obj.id)
@@ -147,15 +168,17 @@ class PostService(IPostService):
             "payload": result.get("message", list_obj),
         }
     
+
     def _delete_list(self, list_id: Union[int, List[int]]) -> PostRead | None:
         """Delete existing list(s)."""
         
         return self.post_repo.delete_list(list_id)
         
+
     async def delete_list(self, user_id: int, list_delete: ListDelete) -> PostRead | None:
         """Delete existing list(s)."""
         
-        fetched_list = self._check_list_object(list_delete.id)
+        fetched_list: ListModel = self._check_list_object(list_delete.id)
         if not fetched_list:
             msg = "Deletion not allowed: List not found"
             logger.error(msg)
@@ -170,12 +193,14 @@ class PostService(IPostService):
         result = self._delete_list(list_delete.id)
         if result["status"] == "success":
             deleted_lists = result["content"]
-            images_ids = [item.image for item in deleted_lists]
+            images_ids = [item.image for item in deleted_lists if item.image != 1]
             result_img = self.post_repo.delete_list_image(image_id=images_ids)
             if result_img["status"] == "error":
-                return result_img
+                pass
+        
         return result
     
+
     async def update_list(self, user_id: int, list_input: ListUpdate) -> PostRead | None:
         """Update an existing list."""
         fetched_list = self._check_list_object(list_input.id)
@@ -192,7 +217,53 @@ class PostService(IPostService):
         serialized = [ListRead.model_validate(lst) for lst in fetched_lists]
         return {"status": "success", "lists": serialized}
     
+
+    async def get_nearby_lists(self, location: str) -> PostRead | None:
+        # TODO: Implement location-based fetching
+        fetched_lists = self.post_repo.get_nearby_lists()
+
+
+    async def get_specific_list(self, list_id: int) -> PostRead | None:
+        """Fetch a specific list by its ID and update visit count."""
+
+        fetched_list = self.post_repo.get_list_by_list_id(list_id=list_id)
+        if fetched_list:
+            result = self.post_repo.update_metrics(ListModel, "visit_count", list_id, addition=True)
+
+            if result["status"] == "error":
+                return {"status": "error", "message": result["message"]}
+            
+            result = self._update_score(list_id, ListModel)
+            if 'error' in result:
+                return {"status": "error", "message": result['message']}
+            
+            return {"status": "success", "content": ListRead.model_validate(fetched_list)}
+        
+        return {"status": "error", "message": "List not found"}
+    
+
+    async def get_specific_site(self, site_id: int) -> PostRead | None:
+        """Fetch a specific site by its ID and update click count."""
+
+        fetched_site = self.post_repo.get_site_by_site_id(site_id=site_id)
+        if fetched_site:
+            result = self.post_repo.update_metrics(Site, "click_count", site_id, addition=True)
+
+            if result["status"] == "error":
+                return {"status": "error", "message": result["message"]}
+            
+            result = self._update_score(site_id, Site)
+            if 'error' in result:
+                return {"status": "error", "message": result['message']}
+            
+            return {"status": "success", "content": SiteRead.model_validate(fetched_site)}
+        
+        return {"status": "error", "message": "Site not found"}
+    
+
     async def get_image(self, image_id: int) -> PostRead | None:
+        """Fetch a specific image by its ID."""
+
         status, content = "error", "Not found"
         if image_id:
             content = self.post_repo.get_image(image_id)
@@ -200,33 +271,31 @@ class PostService(IPostService):
 
         return {"status": status, "content": content}
     
+
     async def upload_image(self, file) -> dict:
+        """Upload an image file, validate it, and save it to the server."""
+
         status, content = "error", "Invalid upload"
 
         try:
-            # Check file extension
             ext = os.path.splitext(file.filename)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
                 return {"status": "error", "content": "Unsupported file format."}
 
-            # Check file size (in-memory)
             file_content = await file.read()
             size_mb = len(file_content) / (1024 * 1024)
             if size_mb > MAX_IMAGE_SIZE_MB:
                 return {"status": "error", "content": "File too large. Max 5MB."}
 
-            # Load and compress using Pillow
             image_stream = BytesIO(file_content)
             image = PILImage.open(image_stream)
 
-            # Resize and recompress
             image = image.convert("RGB")  # Ensure format
             image = image.resize((150, 150), PILImage.LANCZOS)
             output = BytesIO()
             image.save(output, format="JPEG", optimize=True, quality=70)
             output.seek(0)
 
-            # Save compressed image to disk
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             filename = f"{uuid4().hex}.jpg"
             file_storage = os.path.join(UPLOAD_DIR, filename) # Internal path
@@ -235,7 +304,6 @@ class PostService(IPostService):
             with open(file_storage, "wb") as f:
                 f.write(output.read())
 
-            # Store image metadata in DB
             image_record = Image(name=filename, path=file_path)
             content = self.post_repo.add_image_path(image_record)
             status = "success" if content else "error"
@@ -245,5 +313,49 @@ class PostService(IPostService):
 
         return {"status": status, "content": content}
     
+    def _update_score(self, item_id: int, model: Type[DeclarativeMeta]) -> dict:
+
+        if model == ListModel:
+            result = self.post_repo.get_record_kpis(ListModel, item_id)
+            if 'error' in result:
+                return {"status": "error", "message": result['message']}
+            
+            score_algorithm = self.score_algorithm.compute_list_score(
+                input_metrics=ListKPIs(**result['content'])
+                )
+            
+            result = self.post_repo.update_scores(
+                model=ListModel, 
+                column_name="score", 
+                record_id=item_id, 
+                score=score_algorithm
+            )
+
+            if result['status'] == 'error':
+                return {"status": "error", "message": result['message']}
+            
+            return result
+        
+        elif model == Site:
+            result = self.post_repo.get_record_kpis(Site, item_id)
+            if 'error' in result:
+                return {"status": "error", "message": result['message']}
+            
+            score_algorithm = self.score_algorithm.compute_site_score(
+                input_metrics=SiteKPIs(**result['content'])
+                )
+            
+            result = self.post_repo.update_scores(
+                model=Site, 
+                column_name="score", 
+                record_id=item_id, 
+                score=score_algorithm
+            )
+
+            if result['status'] == 'error':
+                return {"status": "error", "message": result['message']}
+            
+            return result
+
     def get_site(self) -> PostRead | None:
         pass

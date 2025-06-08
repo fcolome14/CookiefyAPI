@@ -21,7 +21,7 @@ from app.services.user_service import UserService
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-templates = Jinja2Templates(directory="app/tmp")
+templates = Jinja2Templates(directory="app/template")
 
 @router.post("/login", response_model=SuccessResponse, status_code=status.HTTP_202_ACCEPTED)
 @limiter.limit("3/minute", key_func=get_remote_address)

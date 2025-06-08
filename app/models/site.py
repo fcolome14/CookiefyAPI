@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Float
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from app.db.base import Base
@@ -15,11 +15,16 @@ class Site(Base):
     address = Column(String, nullable=True)
     city = Column(String, nullable=True)
     contact = Column(String, nullable=True)
+    score = Column(Float, nullable=True, default=0.0)
 
     image_id = Column(Integer, ForeignKey("images.id"), nullable=True)
     image = relationship("Image", backref="sites")
     category = Column(Integer, ForeignKey("categories.id"), nullable=True)
     hashtags = relationship("Hashtag", secondary=site_hashtag_association, back_populates="sites")
+
+    score = Column(Float, nullable=True, server_default=text("0.0"))
+    click_count = Column(Integer, nullable=True, server_default=text("0"))
+    lists_count = Column(Integer, nullable=True, server_default=text("0"))
 
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=True, server_default=text("now()")

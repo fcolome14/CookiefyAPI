@@ -15,6 +15,14 @@
                 "--reload"
             ],
             "jinja": true
+        },
+        {
+            "name": "Python Test Script",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/test_script.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
         }
     ]
 }

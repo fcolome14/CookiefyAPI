@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.sql.expression import text
@@ -19,6 +19,8 @@ class List(Base):
     is_banned = Column(Boolean, nullable=True, default=False)
     is_public = Column(Boolean, nullable=True, default=True)
     accepts_contributions = Column(Boolean, nullable=True, default=False)
+    score = Column(Float, nullable=True, server_default=text("0.0"))
+    visit_count = Column(Integer, nullable=True, server_default=text("0"))
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=True, server_default=text("now()")
     )

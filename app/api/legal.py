@@ -4,7 +4,7 @@ from app.core.config import settings
 from app.core.i18n import translate
 
 router = APIRouter(prefix="/legal", tags=["Legal"])
-templates = Jinja2Templates(directory="app/tmp")
+templates = Jinja2Templates(directory="app/template")
 
 
 @router.get("/terms/")

@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict, field_serializer
 from typing import List as TypingList, Optional
 from app.core.config import settings
 from app.models.image import Image
+from datetime import datetime
 
 class ListCreate(BaseModel):
     name: str
@@ -49,6 +50,25 @@ class ImageRead(BaseModel):
     id: int
     path: str
     model_config = ConfigDict(from_attributes=True)
+
+class UserLocation(BaseModel):
+    location: str
+
+class ListKPIs(BaseModel):
+    id: int
+    likes: int
+    shares: int
+    saves: int
+    visit_count: int
+    image: int
+    created_at: datetime
+
+class SiteKPIs(BaseModel):
+    click_count: int
+    lists_count: int
+
+class Score(BaseModel):
+    score: float
 
 class ListRead(BaseModel):
     id: int
