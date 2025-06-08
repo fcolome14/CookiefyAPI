@@ -1,0 +1,27 @@
+name: Dockerized Test Suite
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: docker-compose -f app/tests/compose/docker-compose.yml up --build --abort-on-container-exit
+
+      - name: Cleanup
+        if: always()
+        run: docker-compose -f app/tests/compose/docker-compose.yml down -v
