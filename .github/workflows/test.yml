@@ -1,0 +1,30 @@
+name: Dockerized Test Suite
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Set up Docker Compose (v2)
+      run: |
+        docker compose version
+
+    - name: Run Docker Compose tests
+      run: |
+        docker compose -f app/tests/compose/docker-compose.yml up --build --abort-on-container-exit
+
+    - name: Tear down
+      if: always()
+      run: docker compose -f app/tests/compose/docker-compose.yml down -v

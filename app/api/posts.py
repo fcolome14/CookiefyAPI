@@ -12,6 +12,7 @@ from app.utils.date_time import TimeUtils
 from app.db.session import get_db
 from io import BytesIO
 from fastapi.responses import StreamingResponse
+from typing import Union
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -22,7 +23,7 @@ def get_post_service(db: Session = Depends(get_db)) -> PostService:
     time_utils = TimeUtils()
     return PostService(db, auth_service, time_utils)
 
-@router.post("/create-list", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/create-list", response_model=Union[SuccessResponse, ErrorResponse], status_code=status.HTTP_201_CREATED)
 async def create_new_list(
     list: ListCreate,
     request: Request,
@@ -67,7 +68,7 @@ async def update_list(
 
     if list_result["status"] == "error":
         return ErrorResponse(
-            message=list_result["payload"],
+            message=list_result["message"],
             meta={
             "request_id": request.headers.get("request-id", "default_request_id"),
             "client": request.headers.get("client-type", "unknown"),
