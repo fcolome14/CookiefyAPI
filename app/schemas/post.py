@@ -17,7 +17,7 @@ class ListUpdate(BaseModel):
     likes: Optional[int] = None
     shares: Optional[int] = None
     saves: Optional[int] = None
-    image: Optional[str] = None
+    image: Optional[int] = None
     sites: Optional[list[int]] = None
     accepts_contributions: Optional[bool] = None
     is_public: Optional[bool] = None
