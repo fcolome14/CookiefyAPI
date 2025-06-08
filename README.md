@@ -257,6 +257,7 @@ cookiefyapi/
 │   ├── models/          # SQLAlchemy models
 │   ├── schemas/         # Pydantic schemas
 │   ├── services/        # Business logic
+│   ├── tests/           # Tests
 │   ├── main.py          # FastAPI entry point
 │   └── dependencies.py
 ├── alembic/             # Alembic migrations
