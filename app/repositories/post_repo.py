@@ -443,4 +443,16 @@ class PostRepository(IPostRepository):
             self.db.rollback()
             print(f"Database update failed: {e}")
             return {"status": "error", "message": "Database update failed."}
+    
+    def update_site(self, site_obj: Site) -> Site | None:
+        """Update a site record."""
+        # TODO: Refactor with a more generic update method. Merge update_list too
+        try:
+            self.db.commit()
+            self.db.refresh(site_obj)
+            return {"status": "success", "message": site_obj}
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            print(f"Database update failed: {e}")
+            return {"status": "error", "message": "Database update failed."}
   

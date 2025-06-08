@@ -51,13 +51,13 @@ async def get_image_content_database(
 async def upload_image(
     request: Request,
     id: int = Form(...),
-    target_model: bool = Form(...),
+    is_list: bool = Form(...),
     file: UploadFile = File(...), 
     user_id: int = Depends(get_current_user),
     post_service: PostService = Depends(get_post_service),
 ):
 
-    result = await post_service.upload_image(file=file, target_metadata=target_model, id_metadata=id)
+    result = await post_service.upload_image(file=file, is_list=is_list, id_metadata=id)
 
     if result["status"] == "error":
         return ErrorResponse(

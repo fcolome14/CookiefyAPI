@@ -273,7 +273,7 @@ class PostService(IPostService):
         return {"status": status, "content": content}
     
 
-    async def upload_image(self, file, target_metadata: str, id_metadata: int) -> dict:
+    async def upload_image(self, file, is_list: bool, id_metadata: int) -> dict:
         """Upload an image file, validate it, and save it to the server."""
 
         status, content = "error", "Invalid upload"
@@ -312,13 +312,20 @@ class PostService(IPostService):
             if status == "error":
                 return {"status": "error", "content": "Failed to save image."}
             
-            fetched_list: ListModel = self.post_repo.get_list_by_list_id(list_id=id_metadata)
-            if not fetched_list:
-                return {"status": "error", "content": "List not found."}
-            
-            if target_metadata:
+            if is_list:
+                fetched_list: ListModel = self.post_repo.get_list_by_list_id(list_id=id_metadata)
+                if not fetched_list:
+                    return {"status": "error", "content": "List not found."}
                 fetched_list.image = content.id
                 result = self.post_repo.update_list(fetched_list)
+                if result["status"] == "error":
+                    return {"status": "error", "content": result["message"]}
+            else:
+                fetched_site: Site = self.post_repo.get_site_by_site_id(site_id=id_metadata)
+                if not fetched_site:
+                    return {"status": "error", "content": "Site not found."}
+                fetched_site.image_id = content.id
+                result = self.post_repo.update_site(fetched_site)
                 if result["status"] == "error":
                     return {"status": "error", "content": result["message"]}
 
