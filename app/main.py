@@ -12,6 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.exceptions import rate_limit_handler, limiter
 from app.db.seed import Seed
 from app.db.session import get_db
+import os
 
 Base.metadata.create_all(bind=engine)
 
@@ -35,7 +36,11 @@ templates = Jinja2Templates(directory="app/template")
 app.mount("/media", StaticFiles(directory="app/users/images"), name="media")
 
 @app.on_event("startup")
-async def seed_database():
+async def startup():
+    # Create required folder
+    os.makedirs("app/users/images", exist_ok=True)
+    
+    # Seed database
     db = next(get_db())
     Seed.seed_data(db)
 
