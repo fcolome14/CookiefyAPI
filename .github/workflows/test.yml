@@ -1,9 +1,10 @@
 name: Dockerized Test Suite
 
 on:
+  push:
+    branches: ["**"]           # run on every branch push
   pull_request:
-    branches:
-      - dev
+    branches: [dev]   
 
 jobs:
   test:
