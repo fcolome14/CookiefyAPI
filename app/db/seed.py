@@ -51,7 +51,7 @@ class Seed:
             with open(filepath, 'rb') as f:
                 image_data = f.read()
 
-            image = Image(name=filename, data=image_data, path=f"/static/images/{filename}")
+            image = Image(name=filename, data=image_data, path=f"defaults/{filename}")
             db.add(image)
 
         db.commit()

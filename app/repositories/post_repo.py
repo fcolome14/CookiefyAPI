@@ -2,7 +2,14 @@ from sqlalchemy.orm import Session, joinedload, aliased
 import sqlalchemy as sa
 from sqlalchemy import or_, and_, select, insert, delete, func, update, case, desc
 from app.models.lists import List as ListModel
-from app.schemas.post import ListKPIs, ListBasicRead, SiteKPIs, SiteBasicRead
+from app.schemas.post import (
+    ListKPIs, 
+    ListBasicRead, 
+    SiteKPIs, 
+    SiteBasicRead, 
+    HashtagBasicRead,
+    HashtagWithCount
+    )
 from app.models.site import Site
 from app.models.user import User
 from app.models.image import Image
@@ -186,17 +193,24 @@ class PostRepository(IPostRepository):
     
     def get_top_hashtags_last_days(self, limit: int, days: int = 7):
         since = datetime.now(timezone.utc) - timedelta(days=days)
-
-        return (
-            self.db.query(site_hashtag_association.c.hashtag_id, func.count().label("count"))
+        count_subquery = (
+            self.db.query(
+                site_hashtag_association.c.hashtag_id.label("hashtag_id"),
+                func.count().label("count")
+            )
             .join(Site, Site.id == site_hashtag_association.c.sites_id)
             .filter(Site.created_at >= since)
             .group_by(site_hashtag_association.c.hashtag_id)
-            .order_by(desc("count"))
+            .subquery()
+        )
+        return (
+            self.db.query(Hashtag, count_subquery.c.count)
+            .join(count_subquery, Hashtag.id == count_subquery.c.hashtag_id)
+            .options(joinedload(Hashtag.image))
+            .order_by(count_subquery.c.count.desc())
             .limit(limit)
             .all()
         )
-
         
     def get_trending_lists_sites(self, location: dict) -> dict:
         """Fetch lists and sites with highest scoring."""
@@ -211,7 +225,13 @@ class PostRepository(IPostRepository):
             "top_sites_near": [SiteBasicRead.from_orm(site) for site in top_sites_global],
             "top_sites_by_hashtag": [{**SiteBasicRead.from_orm(site).dict(),"hashtag_id": hashtag_id} 
                                      for site, hashtag_id in top_sites_by_hashtag],
-            "top_hashtags_last_days": [{"hashtag_id": h_id, "count": count} for h_id, count in top_hashtags_last_days]
+            "top_hashtags_last_days": [
+                HashtagWithCount(
+                    count=count,
+                    hashtag=HashtagBasicRead.from_orm(hashtag)
+                )
+                for hashtag, count in top_hashtags_last_days
+            ]
         }
 
 
