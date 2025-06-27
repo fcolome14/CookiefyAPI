@@ -44,8 +44,8 @@ async def startup():
     os.makedirs("app/users/images", exist_ok=True)
     
     # Seed database
-    db = next(get_db())
-    Seed.seed_data(db)
+    # db = next(get_db())
+    # Seed.seed_data(db)
 
 app.include_router(users.router)
 app.include_router(auth.router)

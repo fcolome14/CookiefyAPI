@@ -21,7 +21,7 @@
             "name": "Python Test Script",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/tests/test_script.py",
+            "program": "${workspaceFolder}/test_scraper_3.py",
             "console": "integratedTerminal",
             "justMyCode": false,
         }
