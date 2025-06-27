@@ -74,6 +74,13 @@ INSERT INTO images (id, name, path) VALUES
 (53, 'site-cellar.png', 'defaults/site-cellar.png'),
 (54, 'site-pub.png', 'defaults/site-pub.png'),
 (55, 'food-basque.png', 'defaults/food-basque.png'),
+(56, 'food-german.png', 'defaults/food-german.png'),
+(57, 'food-venezuela.png', 'defaults/food-venezuela.png'),
+(58, 'food-irish.png', 'defaults/food-irish.png'),
+(59, 'food-oriental.png', 'defaults/food-oriental.png'),
+(60, 'food-fusion.png', 'defaults/food-fusion.png'),
+(61, 'food-arabic.png', 'defaults/food-arabic.png'),
+(62, 'food-cuban.png', 'defaults/food-cuban.png'),
 ON CONFLICT (id) DO NOTHING;
 
 -- ===============================
@@ -124,7 +131,7 @@ INSERT INTO hashtags (id, name, image_id) VALUES
 (42, 'Fine Dining', NULL),
 (43, 'Casual Dining', NULL),
 (44, 'Street Food', NULL),
-(45, 'Fusion', NULL),
+(45, 'Fusion', 60),
 (46, 'Buffet', NULL),
 (47, 'Wine Bar', 5),
 (48, 'Craft Beer', 3),
@@ -142,12 +149,12 @@ INSERT INTO hashtags (id, name, image_id) VALUES
 (60, 'Trattoria', NULL),
 (61, 'Taverne', NULL),
 (62, 'Churrascaria', 11),
-(63, 'Parrilla', 6),
+(63, 'Parrilla', 33),
 (64, 'Asador', 33),
 (65, 'Taqueria', 44),
 (66, 'BBQ', 10),
 (67, 'Andalusian', NULL),
-(68, 'Arab', NULL),
+(68, 'Arab', 61),
 (69, 'Aragonese', NULL),
 (70, 'Asturian', NULL),
 (71, 'Balearic', 9),
@@ -156,7 +163,7 @@ INSERT INTO hashtags (id, name, image_id) VALUES
 (74, 'Castilian', NULL),
 (75, 'Chilean', NULL),
 (76, 'Colombian', NULL),
-(77, 'Cuban', NULL),
+(77, 'Cuban', 62),
 (78, 'Galician', NULL),
 (79, 'Honduran', NULL),
 (80, 'Nicaraguan', NULL),
@@ -166,11 +173,11 @@ INSERT INTO hashtags (id, name, image_id) VALUES
 (84, 'Puerto Rican', NULL),
 (85, 'Salvadoran', NULL),
 (86, 'Uruguayan', NULL),
-(87, 'Venezuelan', NULL),
+(87, 'Venezuelan', 57),
 (88, 'Ecuadorian', NULL),
 (89, 'Extremadura', NULL),
-(90, 'German', NULL),
-(91, 'Irish', NULL),
+(90, 'German', 56),
+(91, 'Irish', 58),
 (92, 'Leonese', NULL),
 (93, 'Murcian', NULL),
 (94, 'Riojan', NULL),
@@ -180,7 +187,7 @@ INSERT INTO hashtags (id, name, image_id) VALUES
 (98, 'Calsots', 13),
 (99, 'Contemporary', NULL),
 (100, 'international', NULL),
-(101, 'Oriental', NULL)
+(101, 'Oriental', 59)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval('images_id_seq', (SELECT MAX(id) FROM images));
