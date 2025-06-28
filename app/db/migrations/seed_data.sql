@@ -1,23 +1,20 @@
-DELETE FROM hashtags;
-DELETE FROM categories;
-DELETE FROM images;
+TRUNCATE TABLE hashtags RESTART IDENTITY CASCADE;
+TRUNCATE TABLE categories RESTART IDENTITY CASCADE;
+TRUNCATE TABLE images RESTART IDENTITY CASCADE;
+TRUNCATE TABLE images RESTART IDENTITY CASCADE;
+TRUNCATE TABLE users RESTART IDENTITY CASCADE;
 
 -- ===============================
--- Static Categories
+-- System Users
 -- ===============================
-INSERT INTO categories (id, name) VALUES
-(1, 'Restaurant'),
-(2, 'Bar'),
-(3, 'Pub'),
-(4, 'Café'),
-(5, 'Street Food')
+-- sys_01 --> sys_ck
+INSERT INTO users (id, name, email, username, hashed_password, is_active) VALUES
+(1, 'Admin', 'cookiefy@gmail.com', 'sys_01', '$2b$12$FKalRH4tKSi6SuIjacsTz.1ISWc3Baws0Ptbi1iZ1BWj8DynLbN7e', true)
 ON CONFLICT (id) DO NOTHING;
-
 
 -- ===============================
 -- Static Images
 -- ===============================
-
 INSERT INTO images (id, name, path) VALUES
 (1, 'default-no_image.png', 'defaults/default-no_image.png'),
 (2, 'default-no_image_2.png', 'defaults/default-no_image_2.png'),
@@ -80,7 +77,18 @@ INSERT INTO images (id, name, path) VALUES
 (59, 'food-oriental.png', 'defaults/food-oriental.png'),
 (60, 'food-fusion.png', 'defaults/food-fusion.png'),
 (61, 'food-arabic.png', 'defaults/food-arabic.png'),
-(62, 'food-cuban.png', 'defaults/food-cuban.png'),
+(62, 'food-cuban.png', 'defaults/food-cuban.png')
+ON CONFLICT (id) DO NOTHING;
+
+-- ===============================
+-- Static Categories
+-- ===============================
+INSERT INTO categories (id, name) VALUES
+(1, 'Restaurant'),
+(2, 'Bar'),
+(3, 'Pub'),
+(4, 'Café'),
+(5, 'Street Food')
 ON CONFLICT (id) DO NOTHING;
 
 -- ===============================
@@ -186,7 +194,7 @@ INSERT INTO hashtags (id, name, image_id) VALUES
 (97, 'Pinchos', NULL),
 (98, 'Calsots', 13),
 (99, 'Contemporary', NULL),
-(100, 'international', NULL),
+(100, 'International', NULL),
 (101, 'Oriental', 59)
 ON CONFLICT (id) DO NOTHING;
 
