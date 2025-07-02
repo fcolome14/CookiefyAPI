@@ -3,7 +3,6 @@
 test_scraper.py
 test_scraper_2.py
 test_geo.py
-images/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -262,6 +262,14 @@ class PostService(IPostService):
         return {"status": "error", "message": "Site not found"}
     
 
+    async def get_trendings(self, location) -> PostRead | None:
+        """Fetch groups of lists and sites based on scoring points."""
+
+        fetched_trends = self.post_repo.get_trending_lists_sites(location)
+        if not fetched_trends:
+            return {"status": "error", "message": "No trending lists or sites found."}
+        return {"status": "success", "content": fetched_trends}
+
     async def get_image(self, image_id: int) -> PostRead | None:
         """Fetch a specific image by its ID."""
 

@@ -35,14 +35,17 @@ templates = Jinja2Templates(directory="app/template")
 # Expose uploaded images
 app.mount("/media", StaticFiles(directory="app/users/images"), name="media")
 
+# Expose default images
+app.mount("/defaults", StaticFiles(directory="app/static/images"), name="media")
+
 @app.on_event("startup")
 async def startup():
     # Create required folder
     os.makedirs("app/users/images", exist_ok=True)
     
     # Seed database
-    db = next(get_db())
-    Seed.seed_data(db)
+    # db = next(get_db())
+    # Seed.seed_data(db)
 
 app.include_router(users.router)
 app.include_router(auth.router)

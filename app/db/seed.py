@@ -14,12 +14,12 @@ class Seed:
     def seed_data(db: Session):
         if db.query(Category).count() == 0:
             Seed.add_categories(db)
-
-        if db.query(Hashtag).count() == 0:
-            Seed.add_hashtags(db)
         
         if db.query(Image).count() == 0:
             Seed.add_images(db)
+
+        if db.query(Hashtag).count() == 0:
+            Seed.add_hashtags(db)
 
 
     @staticmethod
@@ -51,7 +51,7 @@ class Seed:
             with open(filepath, 'rb') as f:
                 image_data = f.read()
 
-            image = Image(name=filename, data=image_data, path=f"/static/images/{filename}")
+            image = Image(name=filename, data=image_data, path=f"defaults/{filename}") # app/static/images
             db.add(image)
 
         db.commit()
@@ -127,7 +127,45 @@ class Seed:
             {"name": "Parrilla"},
             {"name": "Asador"},
             {"name": "Taqueria"},
-            {"name": "BBQ"}
+            {"name": "BBQ"},
+            {"name": "Andalusian"},
+            {"name": "Arab"},
+            {"name": "Aragonese"},
+            {"name": "Asturian"},
+            {"name": "Balearic"},
+            {"name": "Basque"},
+            {"name": "Canarian"},
+            {"name": "Castilian"},
+            {"name": "Chilean"},
+            {"name": "Colombian"},
+            {"name": "Colombian"},
+            {"name": "Colombian"},
+            {"name": "Cuban"},
+            {"name": "Galician"},
+            {"name": "Honduran"},
+            {"name": "Nicaraguan"},
+            {"name": "Panamanian"},
+            {"name": "Paraguayan"},
+            {"name": "Peruvian"},
+            {"name": "Puerto Rican"},
+            {"name": "Salvadoran"},
+            {"name": "Uruguayan"},
+            {"name": "Venezuelan"},
+            {"name": "Ecuadorian"},
+            {"name": "Extremadura"},
+            {"name": "Galician"},
+            {"name": "German"},
+            {"name": "Irish"},
+            {"name": "Leonese"},
+            {"name": "Murcian"},
+            {"name": "Riojan"},
+            {"name": "Romanian"},
+            {"name": "Creperie"},
+            {"name": "Pinchos"},
+            {"name": "Calçots"},
+            {"name": "Contemporary"},
+            {"name": "international"},
+            {"name": "Oriental"},
         ]
         hashtags_data = [Hashtag(**tag) for tag in hashtags]
         db.add_all(hashtags_data)

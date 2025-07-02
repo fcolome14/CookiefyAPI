@@ -12,7 +12,8 @@
             "module": "uvicorn",
             "args": [
                 "app.main:app",
-                "--reload"
+                "--reload",
+                "--port", "8000"
             ],
             "jinja": true
         },
@@ -20,7 +21,7 @@
             "name": "Python Test Script",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/tests/test_script.py",
+            "program": "${workspaceFolder}/test_scraper_3.py",
             "console": "integratedTerminal",
             "justMyCode": false,
         }

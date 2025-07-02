@@ -39,6 +39,39 @@ poetry --version
 -   Download and install: <https://www.postgresql.org/download/>
 -   Optionally install **pgAdmin**: <https://www.pgadmin.org/download/>
 
+####  Seed Data Migration
+
+-   Once `psql` is already installed, locate the path:
+
+    ```bash
+    C:\Program Files\PostgreSQL\15\bin
+    ````
+
+- Add `psql` to your system PATH (if not detected by your prompt):
+
+    1. Press `Win + R`, type `sysdm.cpl`, press Enter.
+    2. Go to **Advanced** → **Environment Variables**.
+    3. Find the **Path** variable under **System Variables**, click **Edit**.
+    4. Add the `psql` path
+
+- Reopen VSC and the terminal. Verify by typing:
+
+    ```bash
+    psql --version
+    ````
+- Run the database migration:
+ 
+    1. First ensure the database structure exists:
+        
+        ````bash
+        poetry run alembic upgrade head
+        ````
+    1. Run the misgration script (seed):
+
+        ```bash
+        psql -h localhost -U <your_user> -d <cookiefy> -f app/db/migrations/seed_data.sql
+        ````
+
 ### 5. **Redis** (for Celery background tasks)
 
 -   Quick local setup using Docker:

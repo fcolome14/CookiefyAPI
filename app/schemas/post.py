@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, field_serializer
+from pydantic import BaseModel, ConfigDict, field_serializer, Field
 from typing import List as TypingList, Optional
 from app.core.config import settings
 from app.models.image import Image
@@ -51,9 +51,6 @@ class ImageRead(BaseModel):
     path: str
     model_config = ConfigDict(from_attributes=True)
 
-class UserLocation(BaseModel):
-    location: str
-
 class ListKPIs(BaseModel):
     id: int
     likes: int
@@ -69,6 +66,49 @@ class SiteKPIs(BaseModel):
 
 class Score(BaseModel):
     score: float
+
+class ListBasicRead(BaseModel):
+    id: int
+    name: str
+    image_file: Optional[ImageRead]
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("image_file")
+    def serialize_image(self, image_file: Optional[ImageRead]) -> Optional[str]:
+        if image_file:
+            return f"{settings.image_domain}/{image_file.path}"
+        return None
+
+class SiteBasicRead(BaseModel):
+    id: int
+    name: str
+    image: Optional[ImageRead]
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("image")
+    def serialize_image(self, image_file: Optional[ImageRead]) -> Optional[str]:
+        if image_file:
+            return f"{settings.image_domain}/{image_file.path}"
+        return None
+
+class HashtagBasicRead(BaseModel):
+    id: int
+    name: str
+    image_file: Optional[ImageRead] = Field(alias="image")  # maps Hashtag.image → image_file
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("image_file")
+    def serialize_image(self, image_file: Optional[ImageRead]) -> Optional[str]:
+        if image_file:
+            return f"{settings.image_domain}/{image_file.path}"
+        return None
+
+class HashtagWithCount(BaseModel):
+    count: int
+    hashtag: HashtagBasicRead
 
 class ListRead(BaseModel):
     id: int
