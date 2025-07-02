@@ -1,3 +1,8 @@
+﻿-- ===============================
+-- IMPORTANT NOTE: These files must be saved as UTF-8 without BOM.
+-- To do so, in Visual Studio Code, go to VSC right bottom (UTF-8) and click it > Save with Encoding > UTF-8.
+-- ===============================
+
 TRUNCATE TABLE hashtags RESTART IDENTITY CASCADE;
 TRUNCATE TABLE categories RESTART IDENTITY CASCADE;
 TRUNCATE TABLE images RESTART IDENTITY CASCADE;
@@ -77,7 +82,13 @@ INSERT INTO images (id, name, path) VALUES
 (59, 'food-oriental.png', 'defaults/food-oriental.png'),
 (60, 'food-fusion.png', 'defaults/food-fusion.png'),
 (61, 'food-arabic.png', 'defaults/food-arabic.png'),
-(62, 'food-cuban.png', 'defaults/food-cuban.png')
+(62, 'food-cuban.png', 'defaults/food-cuban.png'),
+(63, 'food-aragon.png', 'defaults/food-aragon.png'),
+(64, 'food-anadalusia.png', 'defaults/food-andalusia.png'),
+(65, 'food-african.png', 'defaults/food-african.png'),
+(66, 'chart-top-50-global-lists.png', 'defaults/chart-top-50-global-lists.png'),
+(67, 'chart-top-50-global-restaurants.png', 'defaults/chart-top-50-global-restaurants.png'),
+(68, 'chart-top-50-nearby-restaurants.png', 'defaults/chart-top-50-nearby-restaurants.png')
 ON CONFLICT (id) DO NOTHING;
 
 -- ===============================

@@ -1,4 +1,11 @@
+﻿-- ===============================
+-- IMPORTANT NOTE: These files must be saved as UTF-8 without BOM.
+-- To do so, in Visual Studio Code, go to VSC right bottom (UTF-8) and click it > Save with Encoding > UTF-8.
+-- ===============================
+
+TRUNCATE TABLE list_site_association RESTART IDENTITY CASCADE;
 TRUNCATE TABLE site_hashtag_association RESTART IDENTITY CASCADE;
+TRUNCATE TABLE lists RESTART IDENTITY CASCADE;
 TRUNCATE TABLE sites RESTART IDENTITY CASCADE;
 
 -- ===============================
