@@ -25,6 +25,8 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 from typing import Union, List, Type
 from app.utils.date_time import DateUtils
 from datetime import datetime, timedelta, timezone
+import random
+from sqlalchemy.orm import joinedload
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(BASE_DIR, "users", "images")
@@ -130,110 +132,6 @@ class PostRepository(IPostRepository):
             .filter(Site.id == site_id)  # noqa: E712
             .first()
         )
-    
-    def get_top_lists_by_hashtag_score(self, hashtag_ids: list[int], limit: int = 5):
-        SiteAlias = aliased(Site)
-
-        query = (
-            self.db.query(
-                ListModel,
-                func.sum(site_hashtag_association.c.score).label("total_hashtag_score")
-            )
-            .join(list_site_association, list_site_association.c.list_id == ListModel.id)
-            .join(SiteAlias, SiteAlias.id == list_site_association.c.site_id)
-            .join(site_hashtag_association, site_hashtag_association.c.site_id == SiteAlias.id)
-            .filter(ListModel.is_banned == False)
-            .filter(site_hashtag_association.c.hashtag_id.in_(hashtag_ids))
-            .group_by(ListModel.id)
-            .order_by(func.sum(site_hashtag_association.c.score).desc())
-            .limit(limit)
-        )
-        return query.all()
-    
-    def get_top_lists(self, limit: int = 5):
-        return (
-            self.db.query(ListModel)
-            .options(joinedload(ListModel.image_file))  # Eager load the image_file relationship
-            .filter(ListModel.is_banned == False)  # noqa: E712
-            .order_by(ListModel.score.desc())
-            .limit(limit)
-            .all()
-        )
-
-    def get_top_sites(self, limit: int = 5, location: dict = None) -> List[Site]:
-        if not location:
-            # Globally
-            return (
-                self.db.query(Site)
-                .options(joinedload(Site.image))  # Eager load the image relationship
-                .order_by(Site.score.desc())
-                .limit(limit)
-                .all()
-            )
-        # Locally
-        return (
-                self.db.query(Site)
-                .options(joinedload(Site.image))  # Eager load the image relationship
-                .filter(Site.city == location.get("city"))
-                .order_by(Site.score.desc())
-                .limit(limit)
-                .all()
-            )
-    
-    def get_top_sites_by_hashtag(self, limit: int, hashtag_ids: list[int]):
-        return (
-            self.db.query(Site, site_hashtag_association.c.hashtag_id)
-            .join(site_hashtag_association, site_hashtag_association.c.sites_id == Site.id)
-            .filter(site_hashtag_association.c.hashtag_id.in_(hashtag_ids))
-            .order_by(Site.score.desc())
-            .distinct()
-            .limit(limit)
-            .all()
-        )
-    
-    def get_top_hashtags_last_days(self, limit: int, days: int = 7):
-        since = datetime.now(timezone.utc) - timedelta(days=days)
-        count_subquery = (
-            self.db.query(
-                site_hashtag_association.c.hashtag_id.label("hashtag_id"),
-                func.count().label("count")
-            )
-            .join(Site, Site.id == site_hashtag_association.c.sites_id)
-            .filter(Site.created_at >= since)
-            .group_by(site_hashtag_association.c.hashtag_id)
-            .subquery()
-        )
-        return (
-            self.db.query(Hashtag, count_subquery.c.count)
-            .join(count_subquery, Hashtag.id == count_subquery.c.hashtag_id)
-            .options(joinedload(Hashtag.image))
-            .order_by(count_subquery.c.count.desc())
-            .limit(limit)
-            .all()
-        )
-        
-    def get_trending_lists_sites(self, location: dict) -> dict:
-        """Fetch lists and sites with highest scoring."""
-
-        top_list_global = self.get_top_lists(limit=5)
-        top_sites_global = self.get_top_sites(limit=5, location=location)
-        top_sites_by_hashtag = self.get_top_sites_by_hashtag(limit=5, hashtag_ids=[73,74,3])  # Example hashtag IDs)
-        top_hashtags_last_days = self.get_top_hashtags_last_days(limit=5, days=7)
-
-        return {
-            "top_list_global": [ListBasicRead.from_orm(list_) for list_ in top_list_global],
-            "top_sites_near": [SiteBasicRead.from_orm(site) for site in top_sites_global],
-            "top_sites_by_hashtag": [{**SiteBasicRead.from_orm(site).dict(),"hashtag_id": hashtag_id} 
-                                     for site, hashtag_id in top_sites_by_hashtag],
-            "top_hashtags_last_days": [
-                HashtagWithCount(
-                    count=count,
-                    hashtag=HashtagBasicRead.from_orm(hashtag)
-                )
-                for hashtag, count in top_hashtags_last_days
-            ]
-        }
-
 
     def get_list_by_user_id(
         self, user_id: int, 
@@ -570,4 +468,153 @@ class PostRepository(IPostRepository):
             self.db.rollback()
             print(f"Database update failed: {e}")
             return {"status": "error", "message": "Database update failed."}
-  
+    
+    
+    # User engagement methods
+
+    def get_home_feed(self, location: dict) -> dict:
+        return {
+            "top_lists_by_engagement": [ListBasicRead.from_orm(l) for l in self.get_top_lists_by_engagement(limit=5)],
+            "trending_sites_nearby": [SiteBasicRead.from_orm(s) for s in self.get_trending_sites(limit=5, location=location)],
+            "most_saved_sites": [SiteBasicRead.from_orm(s) for s in self.get_most_saved_sites(limit=5)],
+            "new_popular_lists": [ListBasicRead.from_orm(l) for l in self.get_new_popular_lists(limit=5)],
+            "top_hashtags_last_days": [
+                HashtagWithCount(
+                    count=count,
+                    hashtag=HashtagBasicRead.from_orm(hashtag)
+                )
+                for hashtag, count in self.get_top_hashtags_last_days(limit=5, days=7)
+            ],
+            "top_hashtags_global": [HashtagBasicRead.from_orm(h) for h in self.get_top_hashtags_global(limit=5)],
+            "hidden_gem_sites": [SiteBasicRead.from_orm(s) for s in self.get_hidden_gem_sites(limit=5)],
+            "rising_lists": [ListBasicRead.from_orm(l) for l in self.get_rising_lists(limit=5)],
+            "hot_new_hashtags": [
+                HashtagWithCount(
+                    count=count,
+                    hashtag=HashtagBasicRead.from_orm(hashtag)
+                )
+                for hashtag, count in self.get_hot_new_hashtags(limit=5, days=30)
+            ]
+        }
+
+    def get_most_saved_sites(self, limit: int = 5):
+        return (
+            self.db.query(Site)
+            .options(joinedload(Site.image))
+            .order_by(Site.lists_count.desc())
+            .limit(limit)
+            .all()
+        )
+    
+    def get_new_popular_lists(self, limit: int = 5, days: int = 30):
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+
+        return (
+            self.db.query(ListModel)
+            .options(joinedload(ListModel.image_file))
+            .filter(ListModel.is_banned == False, ListModel.created_at >= since)
+            .order_by(ListModel.score.desc())
+            .limit(limit)
+            .all()
+        )
+    
+    def get_trending_sites(self, limit: int = 5, location: dict = None, days: int = 7):
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+
+        query = (
+            self.db.query(Site)
+            .options(joinedload(Site.image))
+            .filter(Site.created_at >= since)
+        )
+
+        if location:
+            query = query.filter(Site.city == location.get("city"))
+
+        return (
+            query.order_by(Site.score.desc())
+            .limit(limit)
+            .all()
+        )
+    
+    def get_top_lists_by_engagement(self, limit: int = 5):
+        return (
+            self.db.query(ListModel)
+            .options(joinedload(ListModel.image_file))
+            .filter(ListModel.is_banned == False)
+            .order_by(ListModel.score.desc())
+            .limit(limit)
+            .all()
+        )
+    
+    def get_top_hashtags_last_days(self, limit: int, days: int = 7):
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        count_subquery = (
+            self.db.query(
+                site_hashtag_association.c.hashtag_id.label("hashtag_id"),
+                func.count().label("count")
+            )
+            .join(Site, Site.id == site_hashtag_association.c.sites_id)
+            .filter(Site.created_at >= since)
+            .group_by(site_hashtag_association.c.hashtag_id)
+            .subquery()
+        )
+        return (
+            self.db.query(Hashtag, count_subquery.c.count)
+            .join(count_subquery, Hashtag.id == count_subquery.c.hashtag_id)
+            .options(joinedload(Hashtag.image))
+            .order_by(count_subquery.c.count.desc())
+            .limit(limit)
+            .all()
+        )
+    
+    def get_top_hashtags_global(self, limit: int = 5):
+        return (
+            self.db.query(Hashtag)
+            .options(joinedload(Hashtag.image))
+            .order_by(Hashtag.score.desc())
+            .limit(limit)
+            .all()
+        )
+    
+    def get_hidden_gem_sites(self, limit: int = 5, pool_size: int = 20):
+        candidates = (
+        self.db.query(Site)
+        .options(joinedload(Site.image))
+        .filter(Site.lists_count <= 3)
+        .order_by(Site.score.desc())
+        .limit(pool_size)
+        .all()
+        )
+        return random.sample(candidates, min(limit, len(candidates)))
+    
+    def get_rising_lists(self, limit: int = 5):
+        return (
+            self.db.query(ListModel)
+            .options(joinedload(ListModel.image_file))
+            .filter(ListModel.is_banned == False)
+            .order_by(ListModel.score.desc())
+            .limit(limit)
+            .all()
+        )
+    
+    def get_hot_new_hashtags(self, limit: int = 5, days: int = 30):
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        count_subquery = (
+            self.db.query(
+                site_hashtag_association.c.hashtag_id.label("hashtag_id"),
+                func.count().label("count")
+            )
+            .join(Site, Site.id == site_hashtag_association.c.sites_id)
+            .filter(Site.created_at >= since)
+            .group_by(site_hashtag_association.c.hashtag_id)
+            .subquery()
+        )
+        return (
+            self.db.query(Hashtag, count_subquery.c.count)
+            .join(count_subquery, Hashtag.id == count_subquery.c.hashtag_id)
+            .options(joinedload(Hashtag.image))
+            .order_by(count_subquery.c.count.desc())
+            .limit(limit)
+            .all()
+        )
+    

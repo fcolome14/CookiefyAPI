@@ -265,7 +265,7 @@ class PostService(IPostService):
     async def get_trendings(self, location) -> PostRead | None:
         """Fetch groups of lists and sites based on scoring points."""
 
-        fetched_trends = self.post_repo.get_trending_lists_sites(location)
+        fetched_trends = self.post_repo.get_home_feed(location)
         if not fetched_trends:
             return {"status": "error", "message": "No trending lists or sites found."}
         return {"status": "success", "content": fetched_trends}
