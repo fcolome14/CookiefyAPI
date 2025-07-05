@@ -8,3 +8,4 @@ from app.models.hashtag import Hashtag
 from app.models.associations import list_site_association, site_hashtag_association
 from app.models.lists import List
 from app.models.user import User
+from app.models.user_interactions import UserInteraction
