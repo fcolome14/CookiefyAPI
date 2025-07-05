@@ -180,11 +180,11 @@ async def get_all_list(
 async def get_list(
     request: Request,
     list_id: int,
-    _: int = Depends(get_current_user),
+    user_id: int = Depends(get_current_user),
     post_service: PostService = Depends(get_post_service),
 ):
     """Endpoint to get a specific list."""
-    result = await post_service.get_specific_list(list_id)
+    result = await post_service.get_specific_list(list_id, user_id)
 
     if result["status"] == "error":
         return ErrorResponse(
@@ -208,11 +208,11 @@ async def get_list(
 async def get_site(
     request: Request,
     site_id: int,
-    _: int = Depends(get_current_user),
+    user_id: int = Depends(get_current_user),
     post_service: PostService = Depends(get_post_service),
 ):
     """Endpoint to get a specific list."""
-    result = await post_service.get_specific_site(site_id)
+    result = await post_service.get_specific_site(site_id, user_id)
 
     if result["status"] == "error":
         return ErrorResponse(

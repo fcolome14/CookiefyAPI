@@ -18,15 +18,15 @@ from app.models.associations import site_hashtag_association
 from app.models.hashtag import Hashtag
 from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
-from typing import Union, List, Optional
+from typing import Union, List
 from sqlalchemy.exc import IntegrityError
 import os
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from typing import Union, List, Type
-from app.utils.date_time import DateUtils
 from datetime import datetime, timedelta, timezone
 import random
 from sqlalchemy.orm import joinedload
+from app.repositories.metrics_repo import PostInteraction
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(BASE_DIR, "users", "images")
@@ -69,8 +69,9 @@ class IPostRepository(ABC):
 class PostRepository(IPostRepository):
     """Repository for post-related database operations."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, post_interaction_service: PostInteraction):
         self.db = db
+        self.post_interaction_service = post_interaction_service
         
     def add_list(self, user_id: int, list_input: ListModel) -> ListModel:
         """Create a new list."""
@@ -229,87 +230,6 @@ class PostRepository(IPostRepository):
             self.db.rollback()
             print("Error updating list_site_association for list %d: %s", list_id, e)
             return False
-    
-
-    def update_metrics(
-        self,
-        model: Type[DeclarativeMeta],
-        column_name: str = "views",
-        record_ids: Union[int, List[int]] = None,
-        addition: bool = True,
-        prevent_negative: bool = True,
-    ) -> dict:
-        """
-        Increment or decrement a numeric metrics column for one or more records.
-
-        Args:
-            model (Type[DeclarativeMeta]): SQLAlchemy model class.
-            column_name (str): Column to update.
-            record_ids (int or List[int]): Record ID(s).
-            addition (bool): Increment if True; decrement if False.
-            prevent_negative (bool): Prevent values from going below zero.
-
-        Returns:
-            dict: Result status.
-        """
-        if isinstance(record_ids, int):
-            record_ids = [record_ids]
-        if not record_ids:
-            return {"status": "error", "message": "No record IDs provided"}
-
-        column_attr = getattr(model, column_name, None)
-        if column_attr is None:
-            return {"status": "error", "message": f"Column '{column_name}' not found in {model.__name__}"}
-
-        delta = 1 if addition else -1
-
-        if prevent_negative:
-            value_expr = case(
-                (column_attr + delta < 0, 0),
-                else_=column_attr + delta
-            )
-        else:
-            value_expr = column_attr + delta
-
-        stmt = (
-            update(model)
-            .where(model.id.in_(record_ids))
-            .values({column_attr: value_expr})
-        )
-
-        self.db.execute(stmt)
-        self.db.commit()
-
-        return {"status": "success", "message": f"{'Incremented' if addition else 'Decremented'} '{column_name}' for {len(record_ids)} record(s)."}
-
-
-    def update_scores(
-        self,
-        model: Type[DeclarativeMeta],
-        column_name: str = "score",
-        record_id: int = None,
-        score: float = 0.0,
-    ) -> dict:
-        """
-        """
-
-        if not record_id:
-            return {"status": "error", "message": "No record IDs provided"}
-
-        column_attr = getattr(model, column_name, None)
-        if column_attr is None:
-            return {"status": "error", "message": f"Column '{column_name}' not found in {model.__name__}"}
-
-        stmt = (
-            update(model)
-            .where(model.id == record_id)
-            .values({column_attr: score})
-        )
-
-        self.db.execute(stmt)
-        self.db.commit()
-
-        return {"status": "success", "message": "Updated score successfully."}
 
 
     def get_record_kpis(
@@ -427,7 +347,7 @@ class PostRepository(IPostRepository):
                 self.db.delete(obj)
 
             if site_ids:
-                self.update_metrics(
+                self.post_interaction_service.update_metrics(
                     model=Site,
                     column_name="lists_count",
                     record_ids=list(set(site_ids)),  # Ensure uniqueness

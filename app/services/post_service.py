@@ -15,6 +15,7 @@ from app.services.auth_service import AuthCodeManager
 from app.utils.date_time import TimeUtils
 import logging
 from app.repositories.post_repo import PostRepository
+from app.repositories.metrics_repo import PostInteraction
 from abc import ABC, abstractmethod
 from typing import Union, List
 import os
@@ -24,7 +25,7 @@ from io import BytesIO
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from typing import Union, List, Type
 from app.algorithms import algorithm
-from app.schemas.media import UploadImage
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,20 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(BASE_DIR, "users", "images")
 MAX_IMAGE_SIZE_MB = 15
 ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+
+
+class EntityType(str, Enum):
+    SITE = "site"
+    LIST = "list"
+    USER = "user"
+
+
+class InteractionType(str, Enum):
+    LIKE = "like"
+    SHARE = "share"
+    SAVE = "save"
+    CLICK = "click"
+
 
 class IPostService(ABC):
     """Interface service for managing posts."""
@@ -65,7 +80,9 @@ class PostService(IPostService):
         self.auth_code_service = auth_code_service
         self.time_utils = time_utils
         self.score_algorithm = algorithm.Score()
-        self.post_repo = PostRepository(db)
+        self.post_interaction = PostInteraction(db)
+        self.post_repo = PostRepository(db, self.post_interaction)
+
 
 
     async def create_list(self, user_id: int, list_input: ListCreate) -> PostRead | None:
@@ -149,7 +166,7 @@ class PostService(IPostService):
                     "message": "Failed to update site associations"
                 }
         
-        result_m = self.post_repo.update_metrics(
+        result_m = self.post_interaction.update_metrics(
             model=Site, 
             column_name="lists_count", 
             record_ids=incoming_site_ids,
@@ -224,12 +241,21 @@ class PostService(IPostService):
         fetched_lists = self.post_repo.get_nearby_lists()
 
 
-    async def get_specific_list(self, list_id: int) -> PostRead | None:
+    async def get_specific_list(self, list_id: int, user_id: int) -> PostRead | None:
         """Fetch a specific list by its ID and update visit count."""
 
         fetched_list = self.post_repo.get_list_by_list_id(list_id=list_id)
         if fetched_list:
-            result = self.post_repo.update_metrics(ListModel, "visit_count", list_id, addition=True)
+            result = self.post_interaction.update_metrics(ListModel, "visit_count", list_id, addition=True)
+
+            if result["status"] == "error":
+                return {"status": "error", "message": result["message"]}
+            
+            result = self.post_interaction.update_interactions(
+                user_id, 
+                EntityType.LIST.value, 
+                list_id,
+                InteractionType.CLICK.value)
 
             if result["status"] == "error":
                 return {"status": "error", "message": result["message"]}
@@ -243,12 +269,21 @@ class PostService(IPostService):
         return {"status": "error", "message": "List not found"}
     
 
-    async def get_specific_site(self, site_id: int) -> PostRead | None:
+    async def get_specific_site(self, site_id: int, user_id: int) -> PostRead | None:
         """Fetch a specific site by its ID and update click count."""
 
         fetched_site = self.post_repo.get_site_by_site_id(site_id=site_id)
         if fetched_site:
-            result = self.post_repo.update_metrics(Site, "click_count", site_id, addition=True)
+            result = self.post_interaction.update_metrics(Site, "click_count", site_id, addition=True)
+
+            if result["status"] == "error":
+                return {"status": "error", "message": result["message"]}
+            
+            result = self.post_interaction.update_interactions(
+                user_id, 
+                EntityType.SITE.value, 
+                site_id,
+                InteractionType.CLICK.value)
 
             if result["status"] == "error":
                 return {"status": "error", "message": result["message"]}
@@ -353,7 +388,7 @@ class PostService(IPostService):
                 input_metrics=ListKPIs(**result['content'])
                 )
             
-            result = self.post_repo.update_scores(
+            result = self.post_interaction.update_scores(
                 model=ListModel, 
                 column_name="score", 
                 record_id=item_id, 
@@ -374,7 +409,7 @@ class PostService(IPostService):
                 input_metrics=SiteKPIs(**result['content'])
                 )
             
-            result = self.post_repo.update_scores(
+            result = self.post_interaction.update_scores(
                 model=Site, 
                 column_name="score", 
                 record_id=item_id, 
