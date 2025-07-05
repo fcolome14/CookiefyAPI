@@ -395,7 +395,9 @@ class PostRepository(IPostRepository):
     ############# User engagement methods ##############
 
     def get_home_feed(self, location: dict, user_id: int) -> dict:
-        user_interaction = self.get_user_interests_and_recent_views(user_id)
+
+        user_data = self.get_user_interests_and_recent_views(user_id=user_id, limit=5)
+
         return {
             "top_lists_by_engagement": [ListBasicRead.from_orm(l) for l in self.get_top_lists_by_engagement(limit=5)],
             "trending_sites_nearby": [SiteBasicRead.from_orm(s) for s in self.get_trending_sites(limit=5, location=location)],
@@ -409,7 +411,7 @@ class PostRepository(IPostRepository):
                 for hashtag, count in self.get_top_hashtags_last_days(limit=5, days=7)
             ],
             "top_hashtags_global": [HashtagBasicRead.from_orm(h) for h in self.get_top_hashtags_global(limit=5)],
-            "hidden_gem_sites": [SiteBasicRead.from_orm(s) for s in self.get_hidden_gem_sites(limit=5)],
+            "hidden_gem_sites": [SiteBasicRead.from_orm(s) for s in self.get_hidden_gem_sites(limit=5, location=location)],
             "rising_lists": [ListBasicRead.from_orm(l) for l in self.get_rising_lists(limit=5)],
             "hot_new_hashtags": [
                 HashtagWithCount(
@@ -418,8 +420,9 @@ class PostRepository(IPostRepository):
                 )
                 for hashtag, count in self.get_hot_new_hashtags(limit=5, days=30)
             ],
-            "user_interests": user_interaction["interests"],
-            "recent_views": user_interaction["recent_views"]
+            "user_interests": user_data["interests"],
+            "recent_views": user_data["recent_views"],
+            "because_you_liked": user_data["because_you_liked"]
         }
 
     def get_most_saved_sites(self, limit: int = 5):
@@ -501,15 +504,34 @@ class PostRepository(IPostRepository):
             .all()
         )
     
-    def get_hidden_gem_sites(self, limit: int = 5, pool_size: int = 20):
-        candidates = (
-        self.db.query(Site)
-        .options(joinedload(Site.image))
-        .filter(Site.lists_count <= 3)
-        .order_by(Site.score.desc())
-        .limit(pool_size)
-        .all()
-        )
+    def get_hidden_gem_sites(self, limit: int = 5, location: dict = None, pool_size: int = 20):
+        if location:
+            filters = []
+            for value in location.values():
+                if value:  # Ensure value is not None
+                    filters.append(Site.address.ilike(f"%{value}%"))
+
+            candidates = (
+                self.db.query(Site)
+                .options(joinedload(Site.image))
+                .filter(
+                    Site.lists_count <= 3,
+                    sa.or_(*filters)
+                )
+                .order_by(Site.score.desc())
+                .limit(pool_size)
+                .all()
+            )
+        else:
+            candidates = (
+                self.db.query(Site)
+                .options(joinedload(Site.image))
+                .filter(Site.lists_count <= 3)
+                .order_by(Site.score.desc())
+                .limit(pool_size)
+                .all()
+            )
+
         return random.sample(candidates, min(limit, len(candidates)))
     
     def get_rising_lists(self, limit: int = 5):
@@ -543,11 +565,13 @@ class PostRepository(IPostRepository):
             .all()
         )
     
-    def get_user_interests_and_recent_views(self, user_id: int) -> dict:
-        """Fetch user interests and recent clicked sites/lists using reusable methods."""
-        
-        one_year_ago = datetime.now(timezone.utc) - timedelta(days=365)
+    def get_user_interests_and_recent_views(self, user_id: int, limit: int = 5) -> dict:
+        """
+        Fetch user interests, recent clicked sites/lists, and 'Because You Liked' recommendations.
+        """
 
+        one_year_ago = datetime.now(timezone.utc) - timedelta(days=365)
+        
         interactions = (
             self.db.query(UserInteraction)
             .filter(
@@ -565,18 +589,15 @@ class PostRepository(IPostRepository):
         sites = self.get_site_by_site_id(site_ids) if site_ids else []
         lists = self.get_list_by_list_id(list_ids) if list_ids else []
 
-        # Ensure lists
         site_list = sites if isinstance(sites, list) else [sites]
         list_list = lists if isinstance(lists, list) else [lists]
 
         hashtag_counter = {}
 
-        # Hashtags directly from clicked sites
         for site in site_list:
             for tag in site.hashtags:
                 hashtag_counter[tag.name] = hashtag_counter.get(tag.name, 0) + 1
 
-        # Hashtags from sites within clicked lists
         for lst in list_list:
             for site in lst.sites:
                 for tag in site.hashtags:
@@ -584,13 +605,51 @@ class PostRepository(IPostRepository):
 
         sorted_hashtags = sorted(hashtag_counter.items(), key=lambda x: x[1], reverse=True)
 
-        recent_views = {
-            "sites": [site.id for site in site_list],
-            "lists": [lst.id for lst in list_list]
-        }
+        top_hashtags = [tag for tag, _ in sorted_hashtags]
+        viewed_site_ids = [site.id for site in site_list]
+        viewed_list_ids = [lst.id for lst in list_list]
+
+        # "Because You Liked" recommendations based on hashtags
+        if top_hashtags:
+            suggested_sites = (
+                self.db.query(Site)
+                .join(Site.hashtags)
+                .filter(
+                    Hashtag.name.in_(top_hashtags),
+                    ~Site.id.in_(viewed_site_ids)
+                )
+                .distinct()
+                .order_by(Site.score.desc())
+                .limit(limit)
+                .all()
+            )
+
+            suggested_lists = (
+                self.db.query(ListModel)
+                .join(ListModel.sites)
+                .join(Site.hashtags)
+                .filter(
+                    Hashtag.name.in_(top_hashtags),
+                    ~ListModel.id.in_(viewed_list_ids),
+                    ListModel.is_banned == False
+                )
+                .distinct()
+                .order_by(ListModel.score.desc())
+                .limit(limit)
+                .all()
+            )
+        else:
+            suggested_sites = []
+            suggested_lists = []
 
         return {
-            "interests": [tag for tag, _ in sorted_hashtags],
-            "recent_views": recent_views
+            "interests": top_hashtags,
+            "recent_views": {
+                "sites": viewed_site_ids,
+                "lists": viewed_list_ids
+            },
+            "because_you_liked": {
+                "sites": [SiteBasicRead.from_orm(site) for site in suggested_sites],
+                "lists": [ListBasicRead.from_orm(lst) for lst in suggested_lists]
+            }
         }
-
