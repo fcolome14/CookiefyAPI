@@ -420,7 +420,6 @@ class PostRepository(IPostRepository):
                 )
                 for hashtag, count in self.get_hot_new_hashtags(limit=5, days=30)
             ],
-            "user_interests": user_data["interests"],
             "recent_views": user_data["recent_views"],
             "because_you_liked": user_data["because_you_liked"]
         }
@@ -606,9 +605,23 @@ class PostRepository(IPostRepository):
         sorted_hashtags = sorted(hashtag_counter.items(), key=lambda x: x[1], reverse=True)
 
         top_hashtags = [tag for tag, _ in sorted_hashtags]
-        viewed_site_ids = [site.id for site in site_list]
-        viewed_list_ids = [lst.id for lst in list_list]
+        recent_sites = [
+            {
+                "id": site.id,
+                "name": site.name,
+                "image": site.image.path if site.image else None
+            }
+            for site in site_list
+        ]
 
+        recent_lists = [
+            {
+                "id": lst.id,
+                "name": lst.name,
+                "image_file": lst.image_file.path if lst.image_file else None
+            }
+            for lst in list_list
+        ]
         # "Because You Liked" recommendations based on hashtags
         if top_hashtags:
             suggested_sites = (
@@ -616,7 +629,7 @@ class PostRepository(IPostRepository):
                 .join(Site.hashtags)
                 .filter(
                     Hashtag.name.in_(top_hashtags),
-                    ~Site.id.in_(viewed_site_ids)
+                    ~Site.id.in_([s["id"] for s in recent_sites])
                 )
                 .distinct()
                 .order_by(Site.score.desc())
@@ -625,28 +638,27 @@ class PostRepository(IPostRepository):
             )
 
             suggested_lists = (
-                self.db.query(ListModel)
-                .join(ListModel.sites)
-                .join(Site.hashtags)
-                .filter(
-                    Hashtag.name.in_(top_hashtags),
-                    ~ListModel.id.in_(viewed_list_ids),
-                    ListModel.is_banned == False
-                )
-                .distinct()
-                .order_by(ListModel.score.desc())
-                .limit(limit)
-                .all()
+            self.db.query(ListModel)
+            .join(ListModel.sites)
+            .join(Site.hashtags)
+            .filter(
+                Hashtag.name.in_(top_hashtags),
+                ~ListModel.id.in_([l["id"] for l in recent_lists]),
+                ListModel.is_banned == False
             )
+            .distinct()
+            .order_by(ListModel.score.desc())
+            .limit(limit)
+            .all()
+        )
         else:
             suggested_sites = []
             suggested_lists = []
 
         return {
-            "interests": top_hashtags,
             "recent_views": {
-                "sites": viewed_site_ids,
-                "lists": viewed_list_ids
+                "sites": [SiteBasicRead.from_orm(s) for s in site_list],
+                "lists": [ListBasicRead.from_orm(l) for l in list_list]
             },
             "because_you_liked": {
                 "sites": [SiteBasicRead.from_orm(site) for site in suggested_sites],
