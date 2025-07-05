@@ -13,6 +13,7 @@ from app.schemas.post import (
 from app.models.site import Site
 from app.models.user import User
 from app.models.image import Image
+from app.models.user_interactions import UserInteraction
 from app.models.associations import list_site_association
 from app.models.associations import site_hashtag_association
 from app.models.hashtag import Hashtag
@@ -27,6 +28,7 @@ from datetime import datetime, timedelta, timezone
 import random
 from sqlalchemy.orm import joinedload
 from app.repositories.metrics_repo import PostInteraction
+from app.constants.enums import EntityType, InteractionType
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(BASE_DIR, "users", "images")
@@ -390,9 +392,10 @@ class PostRepository(IPostRepository):
             return {"status": "error", "message": "Database update failed."}
     
     
-    # User engagement methods
+    ############# User engagement methods ##############
 
-    def get_home_feed(self, location: dict) -> dict:
+    def get_home_feed(self, location: dict, user_id: int) -> dict:
+        user_interaction = self.get_user_interests_and_recent_views(user_id)
         return {
             "top_lists_by_engagement": [ListBasicRead.from_orm(l) for l in self.get_top_lists_by_engagement(limit=5)],
             "trending_sites_nearby": [SiteBasicRead.from_orm(s) for s in self.get_trending_sites(limit=5, location=location)],
@@ -414,7 +417,9 @@ class PostRepository(IPostRepository):
                     hashtag=HashtagBasicRead.from_orm(hashtag)
                 )
                 for hashtag, count in self.get_hot_new_hashtags(limit=5, days=30)
-            ]
+            ],
+            "user_interests": user_interaction["interests"],
+            "recent_views": user_interaction["recent_views"]
         }
 
     def get_most_saved_sites(self, limit: int = 5):
@@ -538,3 +543,54 @@ class PostRepository(IPostRepository):
             .all()
         )
     
+    def get_user_interests_and_recent_views(self, user_id: int) -> dict:
+        """Fetch user interests and recent clicked sites/lists using reusable methods."""
+        
+        one_year_ago = datetime.now(timezone.utc) - timedelta(days=365)
+
+        interactions = (
+            self.db.query(UserInteraction)
+            .filter(
+                UserInteraction.user_id == user_id,
+                UserInteraction.interaction_type == InteractionType.CLICK.value,
+                UserInteraction.entity_type.in_([EntityType.SITE.value, EntityType.LIST.value]),
+                UserInteraction.timestamp >= one_year_ago
+            )
+            .all()
+        )
+
+        site_ids = [i.entity_id for i in interactions if i.entity_type == EntityType.SITE.value]
+        list_ids = [i.entity_id for i in interactions if i.entity_type == EntityType.LIST.value]
+
+        sites = self.get_site_by_site_id(site_ids) if site_ids else []
+        lists = self.get_list_by_list_id(list_ids) if list_ids else []
+
+        # Ensure lists
+        site_list = sites if isinstance(sites, list) else [sites]
+        list_list = lists if isinstance(lists, list) else [lists]
+
+        hashtag_counter = {}
+
+        # Hashtags directly from clicked sites
+        for site in site_list:
+            for tag in site.hashtags:
+                hashtag_counter[tag.name] = hashtag_counter.get(tag.name, 0) + 1
+
+        # Hashtags from sites within clicked lists
+        for lst in list_list:
+            for site in lst.sites:
+                for tag in site.hashtags:
+                    hashtag_counter[tag.name] = hashtag_counter.get(tag.name, 0) + 1
+
+        sorted_hashtags = sorted(hashtag_counter.items(), key=lambda x: x[1], reverse=True)
+
+        recent_views = {
+            "sites": [site.id for site in site_list],
+            "lists": [lst.id for lst in list_list]
+        }
+
+        return {
+            "interests": [tag for tag, _ in sorted_hashtags],
+            "recent_views": recent_views
+        }
+

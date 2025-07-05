@@ -237,7 +237,7 @@ async def get_trendings(
     request: Request,
     lat: float,
     lon: float,
-    _: int = Depends(get_current_user),
+    user_id: int = Depends(get_current_user),
     post_service: PostService = Depends(get_post_service),
 ):
     """Endpoint to get trendings and suggestions based on score."""
@@ -245,7 +245,7 @@ async def get_trendings(
         lat=lat,
         lon=lon
     )
-    result = await post_service.get_trendings(location_str)
+    result = await post_service.get_trendings(location_str, user_id)
 
     if result["status"] == "error":
         return ErrorResponse(

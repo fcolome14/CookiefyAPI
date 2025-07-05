@@ -25,7 +25,7 @@ from io import BytesIO
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from typing import Union, List, Type
 from app.algorithms import algorithm
-from enum import Enum
+from app.constants.enums import EntityType, InteractionType
 
 logger = logging.getLogger(__name__)
 
@@ -33,19 +33,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(BASE_DIR, "users", "images")
 MAX_IMAGE_SIZE_MB = 15
 ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
-
-
-class EntityType(str, Enum):
-    SITE = "site"
-    LIST = "list"
-    USER = "user"
-
-
-class InteractionType(str, Enum):
-    LIKE = "like"
-    SHARE = "share"
-    SAVE = "save"
-    CLICK = "click"
 
 
 class IPostService(ABC):
@@ -297,10 +284,10 @@ class PostService(IPostService):
         return {"status": "error", "message": "Site not found"}
     
 
-    async def get_trendings(self, location) -> PostRead | None:
+    async def get_trendings(self, location, user_id) -> PostRead | None:
         """Fetch groups of lists and sites based on scoring points."""
 
-        fetched_trends = self.post_repo.get_home_feed(location)
+        fetched_trends = self.post_repo.get_home_feed(location, user_id)
         if not fetched_trends:
             return {"status": "error", "message": "No trending lists or sites found."}
         return {"status": "success", "content": fetched_trends}

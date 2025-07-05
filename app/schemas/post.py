@@ -42,7 +42,6 @@ class SiteRead(BaseModel):
     @field_serializer("image")
     def serialize_image(self, image_file: Optional[Image]) -> Optional[str]: # type: ignore
         if image_file:
-            print("DEBUG → path:", image_file.path)
             return f"{settings.image_domain}/{image_file.path}"
         return None
 
@@ -127,7 +126,6 @@ class ListRead(BaseModel):
     @field_serializer("image_file")
     def serialize_image(self, image_file: Optional[ImageRead]) -> Optional[str]:
         if image_file:
-            print("DEBUG → path:", image_file.path)
             return f"{settings.image_domain}/{image_file.path}"
         return None
 
